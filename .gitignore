@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+.env.bak
+.venv.bak
+
+# Python project settings
+.pytest_cache/
+.python-version
+
+# Streamlit specific
+.streamlit/secrets.toml
+
+# Editor directories and files
+.idea/
+.vscode/
+.DS_Store

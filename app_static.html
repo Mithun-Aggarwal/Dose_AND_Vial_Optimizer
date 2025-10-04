@@ -5,59 +5,349 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dose & Vial Optimizer — 70 mg & 100 mg (HCP)</title>
   <style>
-    /* ===== GSK-inspired Orange & White theme ===== */
     :root {
-      --bg:#ffffff;            /* page background */
-      --card:#fff5ef;          /* soft orange card */
-      --text:#2b2b2b;          /* primary text */
-      --muted:#8a4a10;         /* muted orange-brown for labels */
-      --accent:#ff6a00;        /* primary accent (buttons, CTAs) */
-      --good:#0a8a2a;          /* success green */
-      --danger:#cc1f1f;        /* error red */
-      --line:#ffd4b8;          /* soft divider */
-      --info-bg:#fff1e6;       /* info container bg */
-      --info-bd:#ffb485;       /* info container border */
-      --rec-bg:#f2fff2;        /* recommendation bg */
-      --rec-bd:#bfecc2;        /* recommendation border */
+      --page-bg: #ffffff;
+      --surface: #ffffff;
+      --text: #202020;
+      --heading: #7a1523;
+      --subtext: #4a4a4a;
+      --label: #5d6064;
+      --muted: #6f7175;
+      --line: #d9d9d9;
+      --accent: #f26b1a;
+      --focus: #b6323b;
+      --secondary-bg: #f5f5f5;
     }
 
     * { box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; }
-    .wrap { max-width: 1024px; margin: 24px auto 64px; padding: 0 16px; }
 
-    h1 { font-size: 1.6rem; margin: 0 0 8px; }
-    .sub { color: #5c5c5c; margin-bottom: 16px; }
+    body {
+      background: var(--page-bg);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      margin: 0;
+    }
 
-    .card { background: var(--card); border-radius: 14px; padding: 16px; margin: 16px 0; box-shadow: 0 1px 2px rgba(0,0,0,.06); border: 1px solid var(--line); }
-    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .wrap {
+      max-width: 960px;
+      margin: 48px auto 80px;
+      padding: 0 24px;
+    }
 
-    label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
-    input[type="number"], select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--text); }
+    h1 {
+      color: var(--heading);
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      margin: 0;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
 
-    .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    h2 {
+      color: var(--heading);
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.015em;
+      margin: 0 0 20px;
+    }
 
-    .btn { background: var(--accent); color: #fff; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-    .btn:hover { filter: brightness(0.95); }
-    .btn.secondary { background: #ffd4b8; color: #6b2b00; }
+    h3 {
+      color: var(--heading);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      margin: 0 0 12px;
+    }
 
-    .banner { background: var(--info-bg); border: 1px solid var(--info-bd); color: #7a2e00; padding: 10px 12px; border-radius: 10px; margin-bottom: 10px; }
+    .sub {
+      color: var(--subtext);
+      margin: 16px 0 32px;
+      max-width: 760px;
+    }
 
-    .rec { background: var(--rec-bg); border:1px solid var(--rec-bd); color: var(--good); padding:8px 12px; border-radius: 10px; }
-    .info { background: var(--info-bg); border:1px solid var(--info-bd); color:#7a2e00; padding:8px 12px; border-radius:10px; }
-    .error { color: var(--danger); font-weight: 600; }
-    .muted { color: #7a7a7a; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0;
+    }
 
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; }
-    th, td { text-align: right; padding: 10px; border-bottom: 1px solid #eee; }
-    th:nth-child(1), td:nth-child(1) { text-align: left; }
+    .grid {
+      display: grid;
+      gap: 16px 20px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
 
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .8rem; margin-left: 6px; border:1px solid transparent; }
-    .least { background: #f0fff5; color: var(--good); border-color:#bfecc2; }
-    .fewest { background: #fff0e6; color: #a33f00; border-color:#ffc39f; }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--label);
+      letter-spacing: 0.01em;
+    }
 
-    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid var(--line); color:#6b2b00; font-weight:600; }
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
 
-    @media print { .no-print { display:none; } body { background: white; color: black; } .card { box-shadow:none; } }
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--heading);
+      box-shadow: 0 0 0 3px rgba(122, 21, 35, 0.12);
+      outline: none;
+    }
+
+    input[type="radio"] {
+      accent-color: var(--heading);
+    }
+
+    .row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text);
+    }
+
+    .pill {
+      display: inline;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--text);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .pill + .pill::before {
+      content: " / ";
+      color: var(--label);
+      font-weight: 400;
+    }
+
+    .action-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.2s ease;
+    }
+
+    .btn:hover { filter: brightness(0.96); }
+
+    .btn:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .btn.secondary {
+      background: var(--secondary-bg);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn.secondary:hover {
+      background: #ebebeb;
+    }
+
+    .banner {
+      margin: 32px 0;
+      padding: 20px 24px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--heading);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--subtext);
+      line-height: 1.6;
+    }
+
+    .banner strong { color: var(--heading); }
+
+    .status-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+
+    .status-row > div {
+      flex: 1 1 260px;
+      min-width: 220px;
+    }
+
+    .info,
+    .rec {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--subtext);
+      line-height: 1.4;
+      display: flex;
+      align-items: center;
+    }
+
+    .rec {
+      border-color: var(--heading);
+      color: var(--heading);
+      font-weight: 600;
+    }
+
+    .status-row .rec { flex-basis: 100%; }
+
+    .error {
+      color: #b12a36;
+      font-weight: 600;
+      min-height: 1.4em;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      background: #f7f7f7;
+      color: var(--label);
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    td { text-align: right; }
+
+    th:first-child,
+    td:first-child { text-align: left; }
+
+    tbody tr:hover { background: #fbfbfb; }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline;
+      margin-left: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--heading);
+      letter-spacing: 0.02em;
+    }
+
+    .muted { color: var(--muted); }
+
+    .footnote {
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 720px) {
+      .wrap {
+        margin: 32px auto 64px;
+        padding: 0 16px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .action-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .button-group { width: 100%; }
+
+      .button-group .btn { flex: 1 1 auto; width: 100%; }
+
+      .status-row > div { min-width: 100%; }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        color: #000;
+      }
+
+      .wrap {
+        margin: 0;
+        padding: 0 12px;
+      }
+
+      .card {
+        border: none;
+        padding: 16px 0;
+        margin: 16px 0;
+      }
+
+      .banner {
+        border: none;
+        border-left: none;
+        padding-left: 0;
+        margin: 16px 0;
+      }
+
+      .btn,
+      .no-print { display: none !important; }
+
+      table {
+        border: 1px solid #c0c0c0;
+      }
+
+      th { background: #fff; }
+    }
   </style>
 </head>
 <body>
@@ -68,7 +358,7 @@
   <div class="banner">For HCP guidance only. Verify calculations against the product label and local policy. <strong>No underdosing</strong> and <strong>single‑patient use</strong> are assumed. Required mg is rounded <strong>up</strong> to the nearest whole mg.</div>
 
   <div class="card" aria-labelledby="inputs-title">
-    <h2 id="inputs-title" style="margin:0 0 12px; font-size:1.1rem;">Inputs</h2>
+    <h2 id="inputs-title">Inputs</h2>
     <div class="grid">
       <div>
         <label for="weight">Patient weight (kg)</label>
@@ -90,9 +380,9 @@
         <input id="maxVials" type="number" min="1" step="1" value="10"/>
       </div>
     </div>
-    <div class="row" style="margin-top:12px; justify-content:space-between;">
+    <div class="row action-row">
       <div class="error" id="error" role="alert"></div>
-      <div class="row no-print">
+      <div class="button-group no-print">
         <button class="btn" id="calcBtn" aria-label="Calculate options">Calculate options</button>
         <button class="btn secondary" id="resetBtn" aria-label="Reset">Reset</button>
         <button class="btn secondary" id="printBtn" aria-label="Print or Save as PDF">Print / Save PDF</button>
@@ -101,13 +391,13 @@
   </div>
 
   <div class="card">
-    <div class="row" style="justify-content:space-between; align-items:flex-start; gap:8px;">
+    <div class="status-row">
       <div id="summary" class="info">Enter weight and select a regimen, then calculate.</div>
       <div id="requiredbox" class="info" style="display:none;"><strong>Total required dose:</strong> <span id="requiredValue"></span> mg</div>
       <div id="recommend" class="rec" style="display:none;">Recommendation will appear here</div>
     </div>
 
-    <div style="overflow-x:auto; margin-top:10px;">
+    <div class="table-wrap">
       <table id="resultsTbl" style="display:none;">
         <thead>
           <tr>
@@ -123,11 +413,11 @@
         <tbody id="resultsBody"></tbody>
       </table>
     </div>
-    <div class="muted" style="margin-top:8px;">Tie‑breakers (in order): least waste → fewest vials.</div>
+    <div class="muted footnote">Tie‑breakers (in order): least waste → fewest vials.</div>
   </div>
 
   <div class="card no-print" id="tests">
-    <h3 style="margin:0 0 8px; font-size:1rem;">Self‑tests</h3>
+    <h3>Self-tests</h3>
     <div class="muted" id="testResults">Will run automatically…</div>
   </div>
 </div>
@@ -218,8 +508,8 @@
     shown.forEach((o,i)=>{
       const tr=document.createElement('tr');
       const n=document.createElement('td'); n.textContent=`Option ${i+1}`;
-      if(o.waste===best.waste) { const b=document.createElement('span'); b.className='badge least'; b.textContent='Least waste'; n.appendChild(b);} 
-      if(o.totalVials===best.totalVials && o.waste===best.waste) { const b=document.createElement('span'); b.className='badge fewest'; b.textContent='Fewest vials'; n.appendChild(b);} 
+      if(o.waste===best.waste) { const b=document.createElement('span'); b.className='badge least'; b.textContent='Least waste'; n.appendChild(b);}
+      if(o.totalVials===best.totalVials && o.waste===best.waste) { const b=document.createElement('span'); b.className='badge fewest'; b.textContent='Fewest vials'; n.appendChild(b);}
       tr.appendChild(n);
       const tdA=document.createElement('td'); tdA.textContent=fmt(o.x); tr.appendChild(tdA);
       const tdB=document.createElement('td'); tdB.textContent=fmt(o.y); tr.appendChild(tdB);
@@ -233,7 +523,7 @@
   });
 
   // -------------------------
-  // Self‑tests (simple, inline)
+  // Self-tests (simple, inline)
   // -------------------------
   function bestOptionFor(weight, mgPerKg){
     const req = requiredMg(weight, mgPerKg);

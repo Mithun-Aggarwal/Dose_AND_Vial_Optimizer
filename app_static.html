@@ -3,327 +3,367 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dose & Vial Optimizer — 70 mg & 100 mg (HCP)</title>
+  <title>HCP Infusion Planner — Premium Mock with Optimizer</title>
   <style>
-    :root {
-      --page-bg: #ffffff;
-      --surface: #ffffff;
-      --text: #202020;
-      --heading: #7a1523;
-      --subtext: #4a4a4a;
-      --label: #5d6064;
-      --muted: #6f7175;
-      --line: #d9d9d9;
-      --accent: #f26b1a;
-      --focus: #b6323b;
-      --secondary-bg: #f5f5f5;
+    :root{
+      --brand:#8F0E1A;          /* deep red from screenshot */
+      --brand-ink:#6f0c15;
+      --text:#2a2a2a;
+      --muted:#6f6f6f;
+      --bg:#fafafa;
+      --card:#ffffff;
+      --field:#f2f2f2;          /* light grey input */
+      --border:#e6e6e6;
+      --shadow:0 8px 24px rgba(0,0,0,.08);
+      --radius:12px;
+      --accent:#f26b1a;         /* subtle action color */
+      --ok:#1a7f37;
+      --warn:#b3261e;
     }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;color:var(--text);background:var(--bg);line-height:1.45}
 
-    * { box-sizing: border-box; }
+    .wrap{max-width:980px;margin:48px auto;padding:0 20px}
 
-    body {
-      background: var(--page-bg);
-      color: var(--text);
-      font-family: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.6;
-      margin: 0;
-    }
+    .title{font-weight:800;color:var(--brand);font-size:1.35rem;margin-bottom:10px}
+    .subtle{color:var(--muted);margin:6px 0 16px}
 
-    .wrap { max-width: 960px; margin: 48px auto 80px; padding: 0 24px; }
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin:18px 0}
 
-    h1 { color: var(--heading); font-size: 1.9rem; font-weight: 600; letter-spacing: 0.01em; margin: 0; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-    h2 { color: var(--heading); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.015em; margin: 0 0 20px; }
-    h3 { color: var(--heading); font-size: 1rem; font-weight: 600; letter-spacing: 0.01em; margin: 0 0 12px; }
+    .divider{height:1px;background:var(--border);margin:22px 0}
 
-    .sub { color: var(--subtext); margin: 16px 0 32px; max-width: 760px; }
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 32px;align-items:start}
+    @media (max-width:820px){.grid{grid-template-columns:1fr}}
 
-    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin: 24px 0; }
+    .field{display:flex;flex-direction:column;gap:8px}
+    .label{font-weight:700}
+    .input,select{width:100%;background:var(--field);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;font-size:1rem;outline:none}
+    .input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(143,14,26,.12)}
 
-    .grid { display: grid; gap: 16px 20px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .hint{font-size:.9rem;color:var(--muted)}
+    .hint .pill{display:inline-block;margin-left:6px;margin-right:2px;padding:2px 8px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);font-weight:700;font-size:.8rem}
 
-    label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--label); letter-spacing: 0.01em; }
+    .inline-summary{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:none}
+    .inline-summary strong{color:var(--brand)}
 
-    input[type="number"], select { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: #fff; color: var(--text); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-    input[type="number"]:focus, select:focus { border-color: var(--heading); box-shadow: 0 0 0 3px rgba(122, 21, 35, 0.12); outline: none; }
-    input[type="radio"] { accent-color: var(--heading); }
+    .actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px}
+    .btn{background:var(--brand);border:none;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+    .btn.ghost{background:#fff;border:1px solid var(--border);color:var(--text)}
+    .btn:disabled{opacity:.55;cursor:default}
 
-    .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-    .row label { display: flex; align-items: center; gap: 8px; font-weight: 500; margin: 0; color: var(--text); }
+    /* Delta strip */
+    .delta{grid-column:1 / -1; display:none; border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:#fff}
+    .delta.ok{border-color:#d6ead9}
+    .delta.ok strong{color:var(--ok)}
+    .delta.under{border-color:#f2d7d7}
+    .delta.under strong{color:var(--warn)}
+    .bar{height:8px; background:#eee; border-radius:999px; overflow:hidden; margin-top:8px}
+    .bar > span{display:block; height:100%; background:linear-gradient(90deg, rgba(26,127,55,.9), rgba(26,127,55,.6)); width:0}
+    .bar.under > span{background:linear-gradient(90deg, rgba(179,38,30,.9), rgba(179,38,30,.6))}
+    .delta .note{display:block; margin-top:6px; font-size:.85rem; color:var(--muted)}
 
-    .pill { display: inline; padding: 0; border: none; background: none; color: var(--text); font-weight: 500; letter-spacing: 0.01em; }
-    .pill + .pill::before { content: " / "; color: var(--label); font-weight: 400; }
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;z-index:1000}
+    .modal.active{display:flex}
+    .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
+    .sheet{position:relative;background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.25);max-width:960px;width:100%;max-height:88vh;overflow:auto}
+    .sheet .head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+    .sheet .title{margin:0;color:var(--brand);font-size:1.2rem}
+    .x{background:none;border:none;font-size:1.6rem;color:var(--brand-ink);cursor:pointer}
+    .sheet .body{padding:18px}
+    .sheet .foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:10px;justify-content:flex-end}
 
-    .action-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
-    .button-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--border)}
+    th{background:#f7f7f7;text-align:left;color:#555}
+    td{text-align:right}
+    th:first-child,td:first-child{text-align:left}
 
-    .btn { background: var(--accent); color: #fff; border: none; padding: 11px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: filter 0.2s ease; }
-    .btn:hover { filter: brightness(0.96); }
-    .btn:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
-    .btn.secondary { background: var(--secondary-bg); color: var(--text); border: 1px solid var(--line); }
-    .btn.secondary:hover { background: #ebebeb; }
+    .badge{display:inline-block;margin-left:8px;padding:2px 6px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);font-weight:700;font-size:.75rem}
 
-    .banner { margin: 32px 0; padding: 20px 24px; border: 1px solid var(--line); border-left: 4px solid var(--heading); border-radius: 12px; background: var(--surface); color: var(--subtext); line-height: 1.6; }
-    .banner strong { color: var(--heading); }
+    .summary-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
 
-    .status-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; justify-content: space-between; }
-    .status-row > div { flex: 1 1 260px; min-width: 220px; }
-
-    .info, .rec { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; color: var(--subtext); line-height: 1.4; display: flex; align-items: center; }
-    .rec { border-color: var(--heading); color: var(--heading); font-weight: 600; }
-    .status-row .rec { flex-basis: 100%; }
-
-    .error { color: #b12a36; font-weight: 600; min-height: 1.4em; }
-
-    .table-wrap { overflow-x: auto; margin-top: 20px; border-radius: 10px; }
-    table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 0.95rem; }
-    th, td { padding: 12px 16px; border-bottom: 1px solid var(--line); }
-    th { background: #f7f7f7; color: var(--label); text-align: left; font-weight: 600; letter-spacing: 0.01em; }
-    td { text-align: right; }
-    th:first-child, td:first-child { text-align: left; }
-    tbody tr:hover { background: #fbfbfb; }
-    tbody tr:last-child td { border-bottom: none; }
-    .badge { display: inline; margin-left: 8px; font-size: 0.85rem; font-weight: 600; color: var(--heading); letter-spacing: 0.02em; }
-    .muted { color: var(--muted); }
-    .footnote { margin-top: 12px; font-size: 0.9rem; }
-
-    @media (max-width: 720px) {
-      .wrap { margin: 32px auto 64px; padding: 0 16px; }
-      .card { padding: 20px; }
-      .action-row { flex-direction: column; align-items: stretch; }
-      .button-group { width: 100%; }
-      .button-group .btn { flex: 1 1 auto; width: 100%; }
-      .status-row > div { min-width: 100%; }
-    }
-
-    @media print {
-      body { background: #ffffff; color: #000; }
-      .wrap { margin: 0; padding: 0 12px; }
-      .card { border: none; padding: 16px 0; margin: 16px 0; }
-      .banner { border: none; border-left: none; padding-left: 0; margin: 16px 0; }
-      .btn, .no-print { display: none !important; }
-      table { border: 1px solid #c0c0c0; }
-      th { background: #fff; }
-    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Dose & Vial Optimizer — Fixed 70 mg / 100 mg</h1>
-  <div class="sub">For HCPs: choose the dose regimen, enter weight, and get the vial counts that meet or exceed the required dose with minimum waste. <strong>Only 70 mg and 100 mg vials are available.</strong></div>
-
-  <div class="banner">For HCP guidance only. Verify calculations against the product label and local policy. <strong>Exact dose is shown to 2 decimals</strong>; vial calculations use the <strong>rounded‑up</strong> dose to avoid underdosing and assume <strong>single‑patient use</strong>.</div>
-
-  <div class="card" aria-labelledby="inputs-title">
-    <h2 id="inputs-title">Inputs</h2>
-    <div class="grid">
-      <div>
-        <label for="weight">Patient weight (kg)</label>
-        <input id="weight" type="number" min="0" step="0.1" placeholder="e.g., 70"/>
-      </div>
-      <div>
-        <label>Dose regimen (mg/kg)</label>
-        <div class="row" role="radiogroup" aria-label="Dose regimen">
-          <label><input type="radio" name="regimen" value="2.5" checked/> 2.5 mg/kg (Start)</label>
-          <label><input type="radio" name="regimen" value="1.9"/> 1.9 mg/kg (Reduced)</label>
+  <main class="wrap">
+    <div class="title">Please answer the following question:</div>
+    <div class="card">
+      <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;margin-bottom:8px">Is the patient continuing on treatment?</div>
+          <label style="display:inline-flex;align-items:center;gap:8px;margin-right:16px"><input type="radio" name="cont" checked> Yes</label>
+          <label style="display:inline-flex;align-items:center;gap:8px"><input type="radio" name="cont"> No</label>
+        </div>
+        <div>
+          <div style="font-weight:700;margin-bottom:8px">Has the patient’s treatment been delayed?</div>
+          <label style="display:inline-flex;align-items:center;gap:8px;margin-right:16px"><input type="radio" name="delay"> Yes</label>
+          <label style="display:inline-flex;align-items:center;gap:8px"><input type="radio" name="delay" checked> No</label>
         </div>
       </div>
-      <div>
-        <label>Vial strengths (fixed)</label>
-        <div class="row"><span class="pill" aria-label="Fixed vial strengths">70 mg</span><span class="pill" aria-hidden="true">100 mg</span></div>
+      <div class="divider"></div>
+
+      <!-- Infusion details grid -->
+      <div class="grid">
+        <div class="field">
+          <label class="label" for="prev">What date did the previous infusion happen?*</label>
+          <input class="input" id="prev" type="text" placeholder="Select previous date" />
+        </div>
+        <div class="field">
+          <label class="label" for="next">What date is the next infusion?*</label>
+          <input class="input" id="next" type="text" placeholder="Select next date" />
+        </div>
+
+        <div class="field">
+          <label class="label" for="weight">Confirm patient’s weight*</label>
+          <input class="input" id="weight" type="number" min="0" step="0.1" placeholder="e.g., 86" />
+          <div id="inlineSummary" class="inline-summary" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="dose">Confirm patient’s treatment dose*</label>
+          <select id="dose" class="input">
+            <option value="2.5">2.5 mg/kg (Start)</option>
+            <option value="1.9">1.9 mg/kg (Reduced)</option>
+          </select>
+          <div class="actions">
+            <button class="btn" id="openOptimizer" disabled>Open Full Dose & Vial Optimizer</button>
+            <span class="hint">Two vial strengths are available: 70 mg & 100 mg.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="vials70">Confirm number of 70 mg vials</label>
+          <input id="vials70" class="input" type="number" min="0" step="1" placeholder="0" />
+          <div id="hint70" class="hint"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="vials100">Confirm number of 100 mg vials</label>
+          <input id="vials100" class="input" type="number" min="0" step="1" placeholder="0" />
+          <div id="hint100" class="hint"></div>
+        </div>
+
+        <!-- Advisory delta strip spanning both columns -->
+        <div class="delta" id="doseDelta" aria-live="polite">
+          <!-- filled dynamically -->
+          <div class="bar" id="doseBar"><span></span></div>
+          <span class="note">Guidance only. Please verify against PI and local policy.</span>
+        </div>
+
+        <div class="field">
+          <label class="label" for="freq">Confirm infusion frequency*</label>
+          <select id="freq" class="input">
+            <option>3 weeks</option>
+            <option>2 weeks</option>
+            <option>4 weeks</option>
+          </select>
+        </div>
+        <div class="field"></div>
       </div>
-      <div class="no-print">
-        <label>Max total vials</label>
-        <input id="maxVials" type="number" min="1" step="1" value="10"/>
+
+      <div class="divider"></div>
+      <div class="summary-card" id="bottomSummary" style="display:none"></div>
+    </div>
+  </main>
+
+  <!-- Optimizer Modal -->
+  <section class="modal" id="optimizerModal" aria-hidden="true" role="dialog" aria-label="Dose & Vial Optimizer">
+    <div class="backdrop" data-close></div>
+    <div class="sheet" role="document">
+      <div class="head">
+        <h3 class="title">Dose & Vial Optimizer — 70 mg / 100 mg</h3>
+        <button class="x" data-close aria-label="Close">×</button>
+      </div>
+      <div class="body">
+        <div class="grid">
+          <div class="field">
+            <label class="label">Patient weight (kg)</label>
+            <input id="mWeight" type="number" min="0" step="0.1" class="input" />
+          </div>
+          <div class="field">
+            <label class="label">Dose regimen (mg/kg)</label>
+            <select id="mDose" class="input">
+              <option value="2.5">2.5 mg/kg (Start)</option>
+              <option value="1.9">1.9 mg/kg (Reduced)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label">Max total vials</label>
+            <input id="maxVials" type="number" min="1" step="1" value="10" class="input" />
+            <span class="hint">Two strengths only: 70 mg and 100 mg. No underdosing.</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div id="mSummary" class="summary-card">Enter weight to calculate.</div>
+
+        <div class="divider"></div>
+        <div class="table-wrap">
+          <table id="resultTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>70 mg vials</th>
+                <th>100 mg vials</th>
+                <th>Total (mg)</th>
+                <th>Waste (mg)</th>
+                <th>Waste (%)</th>
+                <th>Total vials</th>
+              </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="foot">
+        <button class="btn ghost" data-close>Cancel</button>
+        <button class="btn" id="applyToForm" disabled>Apply to form</button>
       </div>
     </div>
-    <div class="row action-row">
-      <div class="error" id="error" role="alert"></div>
-      <div class="button-group no-print">
-        <button class="btn" id="calcBtn" aria-label="Calculate options">Calculate options</button>
-        <button class="btn secondary" id="resetBtn" aria-label="Reset">Reset</button>
-        <button class="btn secondary" id="printBtn" aria-label="Print or Save as PDF">Print / Save PDF</button>
-      </div>
-    </div>
-  </div>
+  </section>
 
-  <div class="card">
-    <div class="status-row">
-      <div id="summary" class="info">Enter weight and select a regimen, then calculate.</div>
-      <div id="requiredbox" class="info" style="display:none;">
-        <strong>Exact required dose:</strong> <span id="requiredExact"></span> mg
-        <span class="muted" style="margin-left:8px;">(rounded to 2 decimals)</span>
-      </div>
-      <div id="roundedbox" class="info" style="display:none;">
-        <strong>Rounded for vial calculation:</strong> <span id="requiredRounded"></span> mg
-      </div>
-      <div id="recommend" class="rec" style="display:none;">Recommendation will appear here</div>
-    </div>
+  <script>
+    // --- Helpers & State ---
+    const $ = (id)=>document.getElementById(id);
+    const V70 = 70, V100 = 100;
 
-    <div class="table-wrap">
-      <table id="resultsTbl" style="display:none;">
-        <thead>
-          <tr>
-            <th>Option</th>
-            <th>70 mg vials</th>
-            <th>100 mg vials</th>
-            <th>Total (mg)</th>
-            <th>Waste (mg)</th>
-            <th>Waste (%)</th>
-            <th>Total vials</th>
-          </tr>
-        </thead>
-        <tbody id="resultsBody"></tbody>
-      </table>
-    </div>
-    <div class="muted footnote">Tie‑breakers (in order): least waste → fewest vials.</div>
-  </div>
+    function fmt(n,d=0){return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
+    function exactDose(w,mg){if(!(w>0)||!(mg>0))return NaN;return Math.round(w*mg*100)/100;} // 2dp
+    function roundedRequired(exact){return Math.ceil(exact);} // for vial calc
 
-  <div class="card no-print" id="tests">
-    <h3>Self-tests</h3>
-    <div class="muted" id="testResults">Will run automatically…</div>
-  </div>
-</div>
-
-<script>
-  const $ = (id) => document.getElementById(id);
-  const VIAL_A = 70; // mg
-  const VIAL_B = 100; // mg
-
-  // Actions
-  $('printBtn')?.addEventListener('click', () => window.print());
-  $('resetBtn')?.addEventListener('click', () => {
-    $('weight').value=''; $('maxVials').value=10; document.querySelector('input[name="regimen"][value="2.5"]').checked=true;
-    $('resultsTbl').style.display='none'; $('resultsBody').innerHTML='';
-    $('summary').textContent='Enter weight and select a regimen, then calculate.';
-    $('recommend').style.display='none'; $('error').textContent='';
-    $('requiredbox').style.display='none'; $('requiredExact').textContent='';
-    $('roundedbox').style.display='none'; $('requiredRounded').textContent='';
-  });
-
-  // Utils
-  function fmt(n, d=0){ if(n==null||isNaN(n)) return ''; return Number(n).toLocaleString(undefined,{maximumFractionDigits:d, minimumFractionDigits:d}); }
-  function exactDose(weight, mgPerKg){
-    // exact to 2 decimals for display and for rounding step
-    if(!(weight>0) || !(mgPerKg>0)) return NaN;
-    return Math.round((weight * mgPerKg) * 100) / 100; // 2 decimals
-  }
-  function roundedRequired(exact){ return Math.ceil(exact); }
-
-  // Core enumeration (no underdosing, fixed 70/100 mg)
-  function enumerate(requiredRounded, maxVials){
-    const out=[]; const a=VIAL_A, b=VIAL_B;
-    const maxA = Math.min(maxVials, Math.ceil(requiredRounded/a)+6);
-    const maxB = Math.min(maxVials, Math.ceil(requiredRounded/b)+6);
-    for(let x=0;x<=maxA;x++){
-      for(let y=0;y<=maxB;y++){
-        const v=x+y; if(v===0||v>maxVials) continue;
-        const total = x*a + y*b; if(total < requiredRounded) continue; // no underdosing (uses rounded)
-        const waste = total - requiredRounded; const wastePct = total>0? waste/total : 0;
-        out.push({x,y,total,waste,wastePct,totalVials:v});
+    function enumerate(required,maxVials=10){
+      const out=[]; const maxA=Math.min(maxVials,Math.ceil(required/V70)+6); const maxB=Math.min(maxVials,Math.ceil(required/V100)+6);
+      for(let a=0;a<=maxA;a++){
+        for(let b=0;b<=maxB;b++){
+          const v=a+b; if(v===0||v>maxVials) continue;
+          const total=a*V70+b*V100; if(total<required) continue;
+          const waste=total-required; const wastePct= total? waste/total:0;
+          out.push({a,b,total,waste,wastePct,totalVials:v});
+        }
       }
+      out.sort((p,q)=> p.waste!==q.waste? p.waste-q.waste : (p.totalVials-q.totalVials)|| (p.total-q.total));
+      return out;
     }
-    out.sort((p,q)=>{
-      if(p.waste!==q.waste) return p.waste-q.waste;
-      if(p.totalVials!==q.totalVials) return p.totalVials-q.totalVials;
-      return p.total-q.total;
+
+    // Cache required rounded on the page for reuse in delta
+    let lastRequired = null; let lastExact = null; let lastBest = null; let lastOnly70 = null; let lastOnly100 = null;
+
+    // --- Inline Summary on Main Form + hints ---
+    function updateInline(){
+      const w=parseFloat($('weight').value); const d=parseFloat($('dose').value);
+      const box=$('inlineSummary'); const btn=$('openOptimizer'); const btm=$('bottomSummary');
+      if(!(w>0)){ box.style.display='none'; btn.disabled=true; btm.style.display='none'; $('hint70').textContent=''; $('hint100').textContent=''; lastRequired=null; updateDelta(); return; }
+      const exact=exactDose(w,d); const req=roundedRequired(exact); const opts=enumerate(req,10);
+      if(!opts.length){ box.style.display='none'; btn.disabled=true; btm.style.display='none'; lastRequired=null; updateDelta(); return; }
+      const best=opts[0];
+      const only70 = opts.find(o=>o.b===0) || {a:0,total:req,waste:0};
+      const only100 = opts.find(o=>o.a===0) || {b:0,total:req,waste:0};
+
+      lastRequired=req; lastExact=exact; lastBest=best; lastOnly70=only70; lastOnly100=only100;
+
+      box.innerHTML = `<strong>Exact required dose:</strong> ${fmt(exact,2)} mg<br><strong>Suggested (mixed):</strong> ${best.a}×70 mg + ${best.b}×100 mg <span class="hint">(Total ${fmt(best.total)} mg · Waste ${fmt(best.waste)} mg / ${(best.wastePct*100).toFixed(2)}%)</span>`;
+      box.style.display='block';
+      btn.disabled=false;
+
+      // Hints under vial fields
+      $('hint70').innerHTML = `Suggested <em>70‑only</em>: <span class="pill">×${only70.a||0}</span> · Mixed best uses <span class="pill">×${best.a}</span>`;
+      $('hint100').innerHTML = `Suggested <em>100‑only</em>: <span class="pill">×${only100.b||0}</span> · Mixed best uses <span class="pill">×${best.b}</span>`;
+
+      // Update bottom summary live
+      btm.innerHTML = `<strong>Summary</strong><br>Exact: ${fmt(exact,2)} mg · Rounded for vials: ${fmt(req)} mg<br>Recommendation: ${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt(best.total)} mg, Waste ${fmt(best.waste)} mg / ${(best.wastePct*100).toFixed(2)}%)`;
+      btm.style.display='block';
+
+      updateDelta();
+    }
+
+    $('weight').addEventListener('input',updateInline);
+    $('dose').addEventListener('change',updateInline);
+
+    // --- Advisory Delta (over/under/waste) ---
+    function updateDelta(){
+      const strip=$('doseDelta'); const bar=$('doseBar'); const barFill=bar.querySelector('span');
+      const a=parseInt(($('vials70').value||'0'),10); const b=parseInt(($('vials100').value||'0'),10);
+      if(!lastRequired){ strip.style.display='none'; return; }
+      const total = (a*V70) + (b*V100);
+      const under = total < lastRequired;
+      const diff = Math.abs(total - lastRequired);
+      strip.classList.remove('ok','under');
+      if(under){
+        strip.classList.add('under');
+        strip.innerHTML = `<strong>Under by: ${fmt(diff)} mg</strong> <span class="hint">(Total ordered ${fmt(total)} mg; needs ≥ ${fmt(lastRequired)} mg)</span>` + strip.innerHTML;
+        bar.classList.add('under');
+      }else{
+        const waste = total - lastRequired; const pct = total? (waste/total)*100 : 0;
+        strip.classList.add('ok');
+        strip.innerHTML = `<strong>Total ordered: ${fmt(total)} mg</strong> · Waste: ${fmt(waste)} mg (${fmt(pct,2)}%)<div class="bar" id="doseBar"><span></span></div><span class="note">Guidance only. Please verify against PI and local policy.</span>`;
+      }
+      // Update bar width relative to requirement (cap 160%)
+      const ratio = Math.min(total / lastRequired, 1.6);
+      barFill.style.width = (ratio*100/1.6)+"%";
+      strip.style.display='block';
+    }
+
+    ['vials70','vials100'].forEach(id=> $(id).addEventListener('input',updateDelta));
+
+    // --- Modal open/close ---
+    const modal=$('optimizerModal');
+    function openModal(){
+      $('mWeight').value = $('weight').value || '';
+      $('mDose').value = $('dose').value;
+      $('resultTable').style.display='none'; $('resultBody').innerHTML='';
+      $('applyToForm').disabled=true;
+      $('mSummary').textContent = 'Enter weight to calculate.';
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden','false');
+    }
+    function closeModal(){ modal.classList.remove('active'); modal.setAttribute('aria-hidden','true'); }
+    $('openOptimizer').addEventListener('click',openModal);
+    modal.addEventListener('click',(e)=>{ if(e.target.hasAttribute('data-close')) closeModal(); });
+
+    // --- Modal calc & render ---
+    function renderModal(){
+      const w=parseFloat($('mWeight').value); const d=parseFloat($('mDose').value); const max=parseInt($('maxVials').value||'10',10);
+      if(!(w>0)){ $('mSummary').textContent='Please enter patient weight.'; $('resultTable').style.display='none'; $('applyToForm').disabled=true; return; }
+      const exact=exactDose(w,d); const req=roundedRequired(exact);
+      const opts=enumerate(req,max);
+      $('mSummary').innerHTML = `<strong>${fmt(d,1)} mg/kg × ${fmt(w,1)} kg</strong> → Exact <strong>${fmt(exact,2)} mg</strong> (rounded to <strong>${fmt(req)}</strong> mg for vial calc).`;
+      if(!opts.length){ $('resultTable').style.display='none'; $('applyToForm').disabled=true; return; }
+      const body=$('resultBody'); body.innerHTML='';
+      const best=opts[0];
+      opts.slice(0,6).forEach((o,i)=>{
+        const tr=document.createElement('tr');
+        const optCell=document.createElement('td'); optCell.textContent=`Option ${i+1}`; if(o===best){const b=document.createElement('span'); b.className='badge'; b.textContent='Least waste'; optCell.appendChild(b);} tr.appendChild(optCell);
+        ;['a','b'].forEach(k=>{const td=document.createElement('td'); td.textContent=o[k]; tr.appendChild(td);});
+        const tdT=document.createElement('td'); tdT.textContent=fmt(o.total); tr.appendChild(tdT);
+        const tdW=document.createElement('td'); tdW.textContent=fmt(o.waste); tr.appendChild(tdW);
+        const tdWp=document.createElement('td'); tdWp.textContent=(o.wastePct*100).toFixed(2)+'%'; tr.appendChild(tdWp);
+        const tdV=document.createElement('td'); tdV.textContent=o.totalVials; tr.appendChild(tdV);
+        tr.dataset.combo = JSON.stringify({a:o.a,b:o.b});
+        tr.style.cursor='pointer';
+        tr.addEventListener('click',()=>{
+          [...body.children].forEach(r=>r.style.background=''); tr.style.background='#fff7f7';
+          $('applyToForm').dataset.combo = tr.dataset.combo; $('applyToForm').disabled=false;
+        });
+        body.appendChild(tr);
+      });
+      $('resultTable').style.display='table';
+      $('applyToForm').dataset.combo = JSON.stringify({a:best.a,b:best.b});
+      $('applyToForm').disabled=false;
+    }
+
+    ['mWeight','mDose','maxVials'].forEach(id=> $(id).addEventListener('input',renderModal));
+
+    // Apply selection to main form
+    $('applyToForm').addEventListener('click',()=>{
+      const combo = JSON.parse($('applyToForm').dataset.combo||'{"a":0,"b":0}');
+      $('vials70').value = combo.a; $('vials100').value = combo.b;
+      closeModal();
+      updateInline();
     });
-    if(out.length){
-      const minWaste=out[0].waste; const minVAmong= Math.min(...out.filter(r=>r.waste===minWaste).map(r=>r.totalVials));
-      out.forEach(r=>{ if(r.waste===minWaste) r.leastWaste=true; if(r.waste===minWaste && r.totalVials===minVAmong) r.fewestVialsAmongLeast=true; });
-    }
-    return out;
-  }
 
-  function recommendation(opt){
-    if(!opt) return '';
-    const head = opt.waste===0? 'Exact match' : 'Min waste option';
-    return `${head} → order ${opt.x}×70 mg and ${opt.y}×100 mg (Total ${fmt(opt.total,2)} mg; Waste ${fmt(opt.waste,2)} mg / ${(opt.wastePct*100).toFixed(2)}%; ${opt.totalVials} vial${opt.totalVials>1?'s':''})`;
-  }
-
-  // Calculate & render (max 4 options; hide dominated)
-  $('calcBtn')?.addEventListener('click', () => {
-    $('error').textContent=''; $('resultsTbl').style.display='none'; $('resultsBody').innerHTML='';
-    const weight = parseFloat($('weight').value);
-    const mgPerKg = parseFloat(document.querySelector('input[name="regimen"]:checked')?.value || '2.5');
-    const maxVials = parseInt($('maxVials').value||'10',10);
-    if(!(weight>0)) { $('error').textContent='Please enter patient weight.'; return; }
-
-    const exact = exactDose(weight, mgPerKg); // 2-decimal exact
-    const reqRounded = roundedRequired(exact); // rounded up for vial calc
-
-    $('requiredExact').textContent = fmt(exact,2);
-    $('requiredbox').style.display = '';
-
-    $('requiredRounded').textContent = fmt(reqRounded,0);
-    $('roundedbox').style.display = '';
-
-    const opts = enumerate(reqRounded, maxVials);
-    $('summary').textContent = `${fmt(mgPerKg,1)} mg/kg × ${fmt(weight,1)} kg → exact ${fmt(exact,2)} mg (2 d.p.); vials calculated on rounded‑up ${fmt(reqRounded,0)} mg. Two vial strengths: 70 mg & 100 mg.`;
-
-    if(!opts.length){ $('error').textContent='No valid combinations found with current settings. Try increasing max vials.'; $('recommend').style.display='none'; return; }
-
-    // Pareto filter (remove dominated by waste & vials)
-    const pareto = opts.filter((p,i)=> !opts.some((q,j)=> j!==i && q.waste<=p.waste && q.totalVials<=p.totalVials && (q.waste<p.waste || q.totalVials<p.totalVials)));
-
-    const best = pareto[0];
-    const only70 = opts.find(o=> o.y===0);
-    const only100 = opts.find(o=> o.x===0);
-    const nextMixed = pareto.find(o=> o!==best && o.x>0 && o.y>0);
-
-    let shown = [best, only70, only100, nextMixed].filter(Boolean);
-    const uniq = []; const seen = new Set();
-    for(const o of shown){ const k = `${o.x}|${o.y}`; if(!seen.has(k)){ seen.add(k); uniq.push(o);} }
-    shown = uniq.slice(0,4);
-
-    $('recommend').textContent = recommendation(best); $('recommend').style.display='';
-
-    const tbody = $('resultsBody');
-    shown.forEach((o,i)=>{
-      const tr=document.createElement('tr');
-      const n=document.createElement('td'); n.textContent=`Option ${i+1}`;
-      if(o.waste===best.waste) { const b=document.createElement('span'); b.className='badge least'; b.textContent='Least waste'; n.appendChild(b);} 
-      if(o.totalVials===best.totalVials && o.waste===best.waste) { const b=document.createElement('span'); b.className='badge fewest'; b.textContent='Fewest vials'; n.appendChild(b);} 
-      tr.appendChild(n);
-      const tdA=document.createElement('td'); tdA.textContent=fmt(o.x); tr.appendChild(tdA);
-      const tdB=document.createElement('td'); tdB.textContent=fmt(o.y); tr.appendChild(tdB);
-      const tdT=document.createElement('td'); tdT.textContent=fmt(o.total,2); tr.appendChild(tdT);
-      const tdW=document.createElement('td'); tdW.textContent=fmt(o.waste,2); tr.appendChild(tdW);
-      const tdWp=document.createElement('td'); tdWp.textContent=(o.total>0)?(o.wastePct*100).toFixed(2)+'%':''; tr.appendChild(tdWp);
-      const tdV=document.createElement('td'); tdV.textContent=fmt(o.totalVials); tr.appendChild(tdV);
-      tbody.appendChild(tr);
-    });
-    $('resultsTbl').style.display='';
-  });
-
-  // -------------------------
-  // Self‑tests (simple, inline) — still use rounded requirement for vial calc
-  // -------------------------
-  function bestOptionFor(weight, mgPerKg){
-    const exact = exactDose(weight, mgPerKg);
-    const reqRounded = roundedRequired(exact);
-    const opts = enumerate(reqRounded, 10);
-    return opts[0];
-  }
-
-  function runSelfTests(){
-    const cases = [
-      {name:'70 kg @ 2.5 mg/kg → R_exact 175.00; R_round 175', w:70, d:2.5, expect:{x:0,y:2,waste:25}},
-      {name:'70 kg @ 1.9 mg/kg → R_exact 133.00; R_round 133', w:70, d:1.9, expect:{x:2,y:0,waste:7}},
-      {name:'90 kg @ 2.5 mg/kg → R_exact 225.00; R_round 225', w:90, d:2.5, expect:{x:1,y:2,waste:45}},
-      {name:'90 kg @ 1.9 mg/kg → R_exact 171.00; R_round 171', w:90, d:1.9, expect:{x:0,y:2,waste:29}},
-    ];
-    const lines=[]; let pass=0, fail=0;
-    for(const tc of cases){
-      const b = bestOptionFor(tc.w, tc.d);
-      const ok = b && b.x===tc.expect.x && b.y===tc.expect.y && b.waste===tc.expect.waste;
-      if(ok){ pass++; lines.push(`✅ <span class="pass">PASS</span> — ${tc.name} → ${b.x}×70 + ${b.y}×100 (waste ${b.waste} mg)`); }
-      else { fail++; lines.push(`❌ <span class="fail">FAIL</span> — ${tc.name}: expected ${tc.expect.x}×70 + ${tc.expect.y}×100 (waste ${tc.expect.waste}), got ${b?`${b.x}×70 + ${b.y}×100 (waste ${b.waste})`:'no option'}`); }
-    }
-    $('testResults').innerHTML = `<strong>${pass} passed, ${fail} failed</strong><br>`+lines.join('<br>');
-  }
-
-  document.addEventListener('DOMContentLoaded', runSelfTests);
-</script>
+    // First paint: keep page clean
+    updateInline();
+  </script>
 </body>
 </html>

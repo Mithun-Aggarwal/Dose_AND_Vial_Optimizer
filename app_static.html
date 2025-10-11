@@ -40,14 +40,26 @@
     .label{font-weight:700}
     .input,select{width:100%;background:var(--field);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;font-size:1rem;outline:none}
     .input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(143,14,26,.12)}
+    .input[readonly],.input:disabled{background:#f8f8f8;color:var(--muted);cursor:not-allowed}
+    .input[readonly]::placeholder{color:var(--muted)}
 
     .hint{font-size:.9rem;color:var(--muted)}
-    .hint .pill{display:inline-block;margin-left:6px;margin-right:2px;padding:2px 8px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);font-weight:700;font-size:.8rem}
+    .hint .pill{display:inline-flex;align-items:center;margin:4px 6px 0 0;padding:4px 10px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);font-weight:700;font-size:.8rem;background:#fff;cursor:pointer;transition:background .2s ease, color .2s ease}
+    .hint .pill:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+    .hint .pill:hover{background:rgba(143,14,26,.08)}
+    .hint .pill.advisory{border-style:dashed;color:var(--muted);background:rgba(143,14,26,.05);cursor:default}
+    .hint .pill.advisory:hover{background:rgba(143,14,26,.05)}
 
-    .inline-summary{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:none}
+    .inline-summary{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:none;font-size:.95rem}
     .inline-summary strong{color:var(--brand)}
+    .inline-summary .calc{display:block;margin-bottom:6px;color:var(--muted);font-size:.9rem}
 
     .actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px}
+    .actions .icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--brand)}
+    .actions .icon-btn:disabled{opacity:.45;cursor:default}
+    .actions .guideline-btn{flex:1;min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--brand);border:1px dashed var(--brand);padding:0 14px;font-weight:700;border-radius:12px;height:44px;text-decoration:none}
+    .actions .guideline-btn:hover{background:rgba(143,14,26,.08)}
+
     .btn{background:var(--brand);border:none;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer}
     .btn.secondary{background:#fff;color:var(--brand);border:1px solid var(--brand)}
     .btn.ghost{background:#fff;border:1px solid var(--border);color:var(--text)}
@@ -55,10 +67,12 @@
 
     /* Delta strip */
     .delta{grid-column:1 / -1; display:none; border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:#fff}
+    .delta .headline{display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:6px}
+    .delta .required{font-size:.9rem;color:var(--muted);display:block;margin-bottom:6px}
     .delta.ok{border-color:#d6ead9}
-    .delta.ok strong{color:var(--ok)}
+    .delta.ok .headline{color:var(--ok)}
     .delta.under{border-color:#f2d7d7}
-    .delta.under strong{color:var(--warn)}
+    .delta.under .headline{color:var(--warn)}
     .bar{height:8px; background:#eee; border-radius:999px; overflow:hidden; margin-top:8px}
     .bar > span{display:block; height:100%; background:linear-gradient(90deg, rgba(26,127,55,.9), rgba(26,127,55,.6)); width:0}
     .bar.under > span{background:linear-gradient(90deg, rgba(179,38,30,.9), rgba(179,38,30,.6))}
@@ -73,13 +87,22 @@
     .sheet .title{margin:0;color:var(--brand);font-size:1.2rem}
     .x{background:none;border:none;font-size:1.6rem;color:var(--brand-ink);cursor:pointer}
     .sheet .body{padding:18px}
-    .sheet .foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:10px;justify-content:flex-end}
+    .sheet .foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:10px;justify-content:flex-end;align-items:flex-end;flex-wrap:wrap}
+    .apply-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+    .apply-wrap small{font-size:.8rem;color:var(--muted)}
 
     table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden}
     th,td{padding:10px 12px;border-bottom:1px solid var(--border)}
     th{background:#f7f7f7;text-align:left;color:#555}
     td{text-align:right}
     th:first-child,td:first-child{text-align:left}
+
+    .max-pill{display:inline-flex;align-items:center;gap:6px;background:#f7f7f7;border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-weight:600;color:var(--muted);margin-top:6px}
+    .max-pill strong{color:var(--text)}
+
+    .option-best{position:relative}
+    .option-best::before{content:"✓";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(26,127,55,.1);color:var(--ok);margin-right:6px;font-size:.75rem;font-weight:700}
+    .option-best .badge{margin-left:6px}
 
     .badge{display:inline-block;margin-left:8px;padding:2px 6px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);font-weight:700;font-size:.75rem}
 
@@ -109,27 +132,35 @@
       <div class="grid">
         <div class="field">
           <label class="label" for="prev">What date did the previous infusion happen?*</label>
-          <input class="input" id="prev" type="text" placeholder="Select previous date" />
+          <!-- Unchangeable dates per advisory requirements -->
+          <input class="input" id="prev" type="text" value="15 Nov 2025" readonly aria-readonly="true" />
         </div>
         <div class="field">
           <label class="label" for="next">What date is the next infusion?*</label>
-          <input class="input" id="next" type="text" placeholder="Select next date" />
+          <input class="input" id="next" type="text" value="1 Aug 2026" readonly aria-readonly="true" />
         </div>
 
         <div class="field">
           <label class="label" for="weight">Confirm patient’s weight*</label>
-          <input class="input" id="weight" type="number" min="0" step="0.1" placeholder="e.g., 86" />
+          <input class="input" id="weight" type="number" min="0" step="0.1" value="0" placeholder="e.g., 86" />
           <div id="inlineSummary" class="inline-summary" aria-live="polite"></div>
         </div>
         <div class="field">
           <label class="label" for="dose">Confirm patient’s treatment dose*</label>
           <select id="dose" class="input">
+            <option value="" selected disabled>-- Select dose regimen --</option>
             <option value="2.5">2.5 mg/kg (Start)</option>
             <option value="1.9">1.9 mg/kg (Reduced)</option>
           </select>
           <div class="actions">
-            <button class="btn" id="openOptimizer" disabled>Open Full Dose & Vial Optimizer</button>
-            <span class="hint">Two vial strengths are available: 70 mg & 100 mg.</span>
+            <button class="icon-btn" id="openOptimizer" type="button" disabled aria-label="Open dose & vial optimizer">
+              <span aria-hidden="true">🧮</span>
+            </button>
+            <!-- // TODO: replace with TGA PI URL -->
+            <a class="guideline-btn" id="guidelineLink" href="#" target="_blank" rel="noreferrer">
+              View official guideline (TGA)
+            </a>
+            <span class="hint" style="flex-basis:100%">Two vial strengths are available: 70 mg &amp; 100 mg.</span>
           </div>
         </div>
 
@@ -147,8 +178,6 @@
         <!-- Advisory delta strip spanning both columns -->
         <div class="delta" id="doseDelta" aria-live="polite">
           <!-- filled dynamically -->
-          <div class="bar" id="doseBar"><span></span></div>
-          <span class="note">Guidance only. Please verify against PI and local policy.</span>
         </div>
 
         <div class="field">
@@ -184,13 +213,14 @@
           <div class="field">
             <label class="label">Dose regimen (mg/kg)</label>
             <select id="mDose" class="input">
+              <option value="" disabled selected>-- Select dose regimen --</option>
               <option value="2.5">2.5 mg/kg (Start)</option>
               <option value="1.9">1.9 mg/kg (Reduced)</option>
             </select>
           </div>
           <div class="field">
-            <label class="label">Max total vials</label>
-            <input id="maxVials" type="number" min="1" step="1" value="10" class="input" />
+            <label class="label">Max vial option</label>
+            <div class="max-pill" aria-live="polite">Max vial option: <strong>10</strong></div>
             <span class="hint">Two strengths only: 70 mg and 100 mg. No underdosing.</span>
           </div>
         </div>
@@ -217,152 +247,350 @@
         </div>
       </div>
       <div class="foot">
-        <button class="btn ghost" data-close>Cancel</button>
-        <button class="btn" id="applyToForm" disabled>Apply to form</button>
+        <button class="btn ghost" data-close>Close</button>
+        <div class="apply-wrap">
+          <button class="btn" id="applyToForm" disabled>Apply to form</button>
+          <small>Advisory mode: calculate here, then enter final selection on the form.</small>
+        </div>
       </div>
     </div>
   </section>
 
-  <script>
+    <script>
     // --- Helpers & State ---
-    const $ = (id)=>document.getElementById(id);
-    const V70 = 70, V100 = 100;
+    const ADVISORY_MODE = true; // advisory mode keeps modal apply disabled
+    const $ = (id) => document.getElementById(id);
+    const V70 = 70,
+      V100 = 100;
+    const MAX_VIAL_OPTION = 10;
 
-    function fmt(n,d=0){return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
-    function exactDose(w,mg){if(!(w>0)||!(mg>0))return NaN;return Math.round(w*mg*100)/100;} // 2dp
-    function roundedRequired(exact){return Math.ceil(exact);} // for vial calc
+    function fmt(n, d = 0) {
+      return Number(n).toLocaleString(undefined, {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      });
+    }
+    function fmtInput(n) {
+      return Number(n).toLocaleString(undefined, {
+        minimumFractionDigits: Number.isInteger(Number(n)) ? 0 : 1,
+        maximumFractionDigits: 2,
+      });
+    }
+    function exactDose(w, mg) {
+      if (!(w > 0) || !(mg > 0)) return NaN;
+      return Math.round(w * mg * 100) / 100;
+    } // 2dp
+    function roundedRequired(exact) {
+      return Math.ceil(exact);
+    } // for vial calc
 
-    function enumerate(required,maxVials=10){
-      const out=[]; const maxA=Math.min(maxVials,Math.ceil(required/V70)+6); const maxB=Math.min(maxVials,Math.ceil(required/V100)+6);
-      for(let a=0;a<=maxA;a++){
-        for(let b=0;b<=maxB;b++){
-          const v=a+b; if(v===0||v>maxVials) continue;
-          const total=a*V70+b*V100; if(total<required) continue;
-          const waste=total-required; const wastePct= total? waste/total:0;
-          out.push({a,b,total,waste,wastePct,totalVials:v});
+    function enumerate(required, maxVials = MAX_VIAL_OPTION) {
+      const out = [];
+      const maxA = Math.min(maxVials, Math.ceil(required / V70) + 6);
+      const maxB = Math.min(maxVials, Math.ceil(required / V100) + 6);
+      for (let a = 0; a <= maxA; a++) {
+        for (let b = 0; b <= maxB; b++) {
+          const v = a + b;
+          if (v === 0 || v > maxVials) continue;
+          const total = a * V70 + b * V100;
+          if (total < required) continue;
+          const waste = total - required;
+          const wastePct = total ? waste / total : 0;
+          out.push({ a, b, total, waste, wastePct, totalVials: v });
         }
       }
-      out.sort((p,q)=> p.waste!==q.waste? p.waste-q.waste : (p.totalVials-q.totalVials)|| (p.total-q.total));
+      out.sort((p, q) =>
+        p.waste !== q.waste
+          ? p.waste - q.waste
+          : p.totalVials - q.totalVials || p.total - q.total
+      );
       return out;
     }
 
-    // Cache required rounded on the page for reuse in delta
-    let lastRequired = null; let lastExact = null; let lastBest = null; let lastOnly70 = null; let lastOnly100 = null;
+    let lastRequired = null;
+    let lastExact = null;
+    let lastBest = null;
+    let lastOnly70 = null;
+    let lastOnly100 = null;
 
-    // --- Inline Summary on Main Form + hints ---
-    function updateInline(){
-      const w=parseFloat($('weight').value); const d=parseFloat($('dose').value);
-      const box=$('inlineSummary'); const btn=$('openOptimizer'); const btm=$('bottomSummary');
-      if(!(w>0)){ box.style.display='none'; btn.disabled=true; btm.style.display='none'; $('hint70').textContent=''; $('hint100').textContent=''; lastRequired=null; updateDelta(); return; }
-      const exact=exactDose(w,d); const req=roundedRequired(exact); const opts=enumerate(req,10);
-      if(!opts.length){ box.style.display='none'; btn.disabled=true; btm.style.display='none'; lastRequired=null; updateDelta(); return; }
-      const best=opts[0];
-      const only70 = opts.find(o=>o.b===0) || {a:0,total:req,waste:0};
-      const only100 = opts.find(o=>o.a===0) || {b:0,total:req,waste:0};
+    function updateInline() {
+      const weightValue = parseFloat($('weight').value);
+      const doseValue = $('dose').value;
+      const doseNumber = parseFloat(doseValue);
+      const doseSelected = !!doseValue && !Number.isNaN(doseNumber);
+      const summaryBox = $('inlineSummary');
+      const optimizerBtn = $('openOptimizer');
+      const bottomSummary = $('bottomSummary');
 
-      lastRequired=req; lastExact=exact; lastBest=best; lastOnly70=only70; lastOnly100=only100;
+      if (!(weightValue > 0) || !doseSelected) {
+        summaryBox.style.display = 'none';
+        summaryBox.innerHTML = '';
+        optimizerBtn.disabled = true;
+        bottomSummary.style.display = 'none';
+        bottomSummary.innerHTML = '';
+        $('hint70').innerHTML = '';
+        $('hint100').innerHTML = '';
+        lastRequired = null;
+        lastExact = null;
+        lastBest = null;
+        lastOnly70 = null;
+        lastOnly100 = null;
+        updateDelta();
+        return;
+      }
 
-      box.innerHTML = `<strong>Exact required dose:</strong> ${fmt(exact,2)} mg<br><strong>Suggested (mixed):</strong> ${best.a}×70 mg + ${best.b}×100 mg <span class="hint">(Total ${fmt(best.total)} mg · Waste ${fmt(best.waste)} mg / ${(best.wastePct*100).toFixed(2)}%)</span>`;
-      box.style.display='block';
-      btn.disabled=false;
+      const exact = exactDose(weightValue, doseNumber);
+      if (!Number.isFinite(exact)) {
+        summaryBox.style.display = 'none';
+        summaryBox.innerHTML = '';
+        optimizerBtn.disabled = true;
+        bottomSummary.style.display = 'none';
+        bottomSummary.innerHTML = '';
+        $('hint70').innerHTML = '';
+        $('hint100').innerHTML = '';
+        lastRequired = null;
+        lastExact = null;
+        lastBest = null;
+        lastOnly70 = null;
+        lastOnly100 = null;
+        updateDelta();
+        return;
+      }
 
-      // Hints under vial fields
-      $('hint70').innerHTML = `Suggested <em>70‑only</em>: <span class="pill">×${only70.a||0}</span> · Mixed best uses <span class="pill">×${best.a}</span>`;
-      $('hint100').innerHTML = `Suggested <em>100‑only</em>: <span class="pill">×${only100.b||0}</span> · Mixed best uses <span class="pill">×${best.b}</span>`;
+      const required = roundedRequired(exact);
+      const options = enumerate(required, MAX_VIAL_OPTION);
+      if (!options.length) {
+        summaryBox.style.display = 'none';
+        summaryBox.innerHTML = '';
+        optimizerBtn.disabled = true;
+        bottomSummary.style.display = 'none';
+        bottomSummary.innerHTML = '';
+        $('hint70').innerHTML = '';
+        $('hint100').innerHTML = '';
+        lastRequired = null;
+        lastExact = null;
+        lastBest = null;
+        lastOnly70 = null;
+        lastOnly100 = null;
+        updateDelta();
+        return;
+      }
 
-      // Update bottom summary live
-      btm.innerHTML = `<strong>Summary</strong><br>Exact: ${fmt(exact,2)} mg · Rounded for vials: ${fmt(req)} mg<br>Recommendation: ${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt(best.total)} mg, Waste ${fmt(best.waste)} mg / ${(best.wastePct*100).toFixed(2)}%)`;
-      btm.style.display='block';
+      const best = options[0];
+      const only70 = options.find((o) => o.b === 0) || { a: 0 };
+      const only100 = options.find((o) => o.a === 0) || { b: 0 };
+
+      lastRequired = required;
+      lastExact = exact;
+      lastBest = best;
+      lastOnly70 = only70;
+      lastOnly100 = only100;
+
+      const calcLine = `Calculation: ${fmtInput(doseNumber)} mg/kg × ${fmtInput(weightValue)} kg = ${fmt(exact, 2)} mg (rounded up to ${fmt(required)} mg for vial selection).`;
+      const exactLine = `<strong>Exact required dose:</strong> ${fmt(exact, 2)} mg`;
+      const suggestionLine = `<strong>Suggested (mixed):</strong> ${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt(best.total)} mg · Waste ${fmt(best.waste)} mg / ${fmt(best.wastePct * 100, 2)}%)`;
+
+      summaryBox.innerHTML = `<span class="calc">${calcLine}</span><div>${exactLine}</div><div>${suggestionLine}</div>`;
+      summaryBox.style.display = 'block';
+
+      optimizerBtn.disabled = false;
+
+      $('hint70').innerHTML = `Suggested <em>70-only</em>: <button type="button" class="pill" data-target="70" data-count="${only70.a || 0}" aria-pressed="false">70-only ×${fmt(only70.a || 0)}</button><span class="pill advisory" aria-hidden="true">Mixed best ×${fmt(best.a)}</span>`;
+      $('hint100').innerHTML = `Suggested <em>100-only</em>: <button type="button" class="pill" data-target="100" data-count="${only100.b || 0}" aria-pressed="false">100-only ×${fmt(only100.b || 0)}</button><span class="pill advisory" aria-hidden="true">Mixed best ×${fmt(best.b)}</span>`;
+
+      bottomSummary.innerHTML = `<strong>Summary</strong><br>${calcLine}<br><strong>Suggested mix:</strong> ${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt(best.total)} mg · Waste ${fmt(best.waste)} mg / ${fmt(best.wastePct * 100, 2)}%)`;
+      bottomSummary.style.display = 'block';
 
       updateDelta();
     }
 
-    $('weight').addEventListener('input',updateInline);
-    $('dose').addEventListener('change',updateInline);
+    $('weight').addEventListener('input', updateInline);
+    $('dose').addEventListener('change', updateInline);
 
-    // --- Advisory Delta (over/under/waste) ---
-    function updateDelta(){
-      const strip=$('doseDelta'); const bar=$('doseBar'); const barFill=bar.querySelector('span');
-      const a=parseInt(($('vials70').value||'0'),10); const b=parseInt(($('vials100').value||'0'),10);
-      if(!lastRequired){ strip.style.display='none'; return; }
-      const total = (a*V70) + (b*V100);
-      const under = total < lastRequired;
-      const diff = Math.abs(total - lastRequired);
-      strip.classList.remove('ok','under');
-      if(under){
-        strip.classList.add('under');
-        strip.innerHTML = `<strong>Under by: ${fmt(diff)} mg</strong> <span class="hint">(Total ordered ${fmt(total)} mg; needs ≥ ${fmt(lastRequired)} mg)</span>` + strip.innerHTML;
-        bar.classList.add('under');
-      }else{
-        const waste = total - lastRequired; const pct = total? (waste/total)*100 : 0;
-        strip.classList.add('ok');
-        strip.innerHTML = `<strong>Total ordered: ${fmt(total)} mg</strong> · Waste: ${fmt(waste)} mg (${fmt(pct,2)}%)<div class="bar" id="doseBar"><span></span></div><span class="note">Guidance only. Please verify against PI and local policy.</span>`;
+    function updateDelta() {
+      const strip = $('doseDelta');
+      if (!lastRequired) {
+        strip.style.display = 'none';
+        strip.innerHTML = '';
+        return;
       }
-      // Update bar width relative to requirement (cap 160%)
-      const ratio = Math.min(total / lastRequired, 1.6);
-      barFill.style.width = (ratio*100/1.6)+"%";
-      strip.style.display='block';
+      const a = parseInt(($('vials70').value || '0'), 10);
+      const b = parseInt(($('vials100').value || '0'), 10);
+      const total = a * V70 + b * V100;
+      const under = total < lastRequired;
+      strip.classList.remove('ok', 'under');
+
+      let html = `<span class="required">Required (rounded): ${fmt(lastRequired)} mg</span>`;
+      if (under) {
+        const diff = lastRequired - total;
+        strip.classList.add('under');
+        html += `<div class="headline">⚠️ Under by: ${fmt(diff)} mg</div>`;
+        html += `<div class="bar under"><span></span></div>`;
+        html += `<span class="note">Guidance only. Please verify against PI and local policy.</span>`;
+      } else {
+        const waste = total - lastRequired;
+        const pct = total ? (waste / total) * 100 : 0;
+        strip.classList.add('ok');
+        html += `<div class="headline">Total ordered: ${fmt(total)} mg · Waste: ${fmt(waste)} mg (${fmt(pct, 2)}%)</div>`;
+        html += `<div class="bar"><span></span></div>`;
+        html += `<span class="note">Guidance only. Please verify against PI and local policy.</span>`;
+      }
+
+      strip.innerHTML = html;
+
+      const barSpan = strip.querySelector('.bar > span');
+      if (barSpan) {
+        const ratio = total / lastRequired;
+        const widthPercent = under
+          ? Math.max(0, Math.min(ratio, 1)) * 100
+          : (Math.min(Math.max(ratio, 0), 1.6) / 1.6) * 100;
+        barSpan.style.width = `${widthPercent}%`;
+      }
+
+      strip.style.display = 'block';
     }
 
-    ['vials70','vials100'].forEach(id=> $(id).addEventListener('input',updateDelta));
+    ['vials70', 'vials100'].forEach((id) =>
+      $(id).addEventListener('input', updateDelta)
+    );
 
-    // --- Modal open/close ---
-    const modal=$('optimizerModal');
-    function openModal(){
-      $('mWeight').value = $('weight').value || '';
-      $('mDose').value = $('dose').value;
-      $('resultTable').style.display='none'; $('resultBody').innerHTML='';
-      $('applyToForm').disabled=true;
-      $('mSummary').textContent = 'Enter weight to calculate.';
-      modal.classList.add('active');
-      modal.setAttribute('aria-hidden','false');
-    }
-    function closeModal(){ modal.classList.remove('active'); modal.setAttribute('aria-hidden','true'); }
-    $('openOptimizer').addEventListener('click',openModal);
-    modal.addEventListener('click',(e)=>{ if(e.target.hasAttribute('data-close')) closeModal(); });
-
-    // --- Modal calc & render ---
-    function renderModal(){
-      const w=parseFloat($('mWeight').value); const d=parseFloat($('mDose').value); const max=parseInt($('maxVials').value||'10',10);
-      if(!(w>0)){ $('mSummary').textContent='Please enter patient weight.'; $('resultTable').style.display='none'; $('applyToForm').disabled=true; return; }
-      const exact=exactDose(w,d); const req=roundedRequired(exact);
-      const opts=enumerate(req,max);
-      $('mSummary').innerHTML = `<strong>${fmt(d,1)} mg/kg × ${fmt(w,1)} kg</strong> → Exact <strong>${fmt(exact,2)} mg</strong> (rounded to <strong>${fmt(req)}</strong> mg for vial calc).`;
-      if(!opts.length){ $('resultTable').style.display='none'; $('applyToForm').disabled=true; return; }
-      const body=$('resultBody'); body.innerHTML='';
-      const best=opts[0];
-      opts.slice(0,6).forEach((o,i)=>{
-        const tr=document.createElement('tr');
-        const optCell=document.createElement('td'); optCell.textContent=`Option ${i+1}`; if(o===best){const b=document.createElement('span'); b.className='badge'; b.textContent='Least waste'; optCell.appendChild(b);} tr.appendChild(optCell);
-        ;['a','b'].forEach(k=>{const td=document.createElement('td'); td.textContent=o[k]; tr.appendChild(td);});
-        const tdT=document.createElement('td'); tdT.textContent=fmt(o.total); tr.appendChild(tdT);
-        const tdW=document.createElement('td'); tdW.textContent=fmt(o.waste); tr.appendChild(tdW);
-        const tdWp=document.createElement('td'); tdWp.textContent=(o.wastePct*100).toFixed(2)+'%'; tr.appendChild(tdWp);
-        const tdV=document.createElement('td'); tdV.textContent=o.totalVials; tr.appendChild(tdV);
-        tr.dataset.combo = JSON.stringify({a:o.a,b:o.b});
-        tr.style.cursor='pointer';
-        tr.addEventListener('click',()=>{
-          [...body.children].forEach(r=>r.style.background=''); tr.style.background='#fff7f7';
-          $('applyToForm').dataset.combo = tr.dataset.combo; $('applyToForm').disabled=false;
-        });
-        body.appendChild(tr);
+    ['hint70', 'hint100'].forEach((id) => {
+      $(id).addEventListener('click', (event) => {
+        const pill = event.target.closest('button.pill');
+        if (!pill) return;
+        const count = parseInt(pill.dataset.count || '0', 10);
+        if (pill.dataset.target === '70') {
+          $('vials70').value = count;
+          $('vials100').value = 0; // advisory mode: set paired vial count to zero for clarity
+        } else if (pill.dataset.target === '100') {
+          $('vials100').value = count;
+          $('vials70').value = 0; // advisory mode: set paired vial count to zero for clarity
+        }
+        updateDelta();
       });
-      $('resultTable').style.display='table';
-      $('applyToForm').dataset.combo = JSON.stringify({a:best.a,b:best.b});
-      $('applyToForm').disabled=false;
-    }
-
-    ['mWeight','mDose','maxVials'].forEach(id=> $(id).addEventListener('input',renderModal));
-
-    // Apply selection to main form
-    $('applyToForm').addEventListener('click',()=>{
-      const combo = JSON.parse($('applyToForm').dataset.combo||'{"a":0,"b":0}');
-      $('vials70').value = combo.a; $('vials100').value = combo.b;
-      closeModal();
-      updateInline();
     });
 
-    // First paint: keep page clean
+    const modal = $('optimizerModal');
+    function openModal() {
+      const mainWeight = parseFloat($('weight').value);
+      $('mWeight').value = mainWeight > 0 ? $('weight').value : '';
+      const mainDoseValue = $('dose').value;
+      const modalDose = $('mDose');
+      modalDose.value = mainDoseValue || '';
+      if (!mainDoseValue) {
+        modalDose.selectedIndex = 0;
+      }
+      $('resultBody').innerHTML = '';
+      $('resultTable').style.display = 'none';
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      renderModal();
+    }
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    $('openOptimizer').addEventListener('click', openModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target.hasAttribute('data-close')) closeModal();
+    });
+
+    function renderModal() {
+      const weightValue = parseFloat($('mWeight').value);
+      const doseValue = $('mDose').value;
+      const doseNumber = parseFloat(doseValue);
+      const doseSelected = !!doseValue && !Number.isNaN(doseNumber);
+      const summary = $('mSummary');
+      const table = $('resultTable');
+      const body = $('resultBody');
+      const applyBtn = $('applyToForm');
+
+      if (!(weightValue > 0)) {
+        summary.textContent = 'Please enter patient weight.';
+        table.style.display = 'none';
+        applyBtn.disabled = true;
+        return;
+      }
+      if (!doseSelected) {
+        summary.textContent = 'Please select the patient dose regimen.';
+        table.style.display = 'none';
+        applyBtn.disabled = true;
+        return;
+      }
+
+      const exact = exactDose(weightValue, doseNumber);
+      const required = roundedRequired(exact);
+      const options = enumerate(required, MAX_VIAL_OPTION);
+
+      summary.innerHTML = `Calculation: ${fmtInput(doseNumber)} mg/kg × ${fmtInput(weightValue)} kg = <strong>${fmt(exact, 2)} mg</strong> (rounded up to <strong>${fmt(required)} mg</strong> for vial selection).`;
+
+      if (!options.length) {
+        table.style.display = 'none';
+        applyBtn.disabled = true;
+        return;
+      }
+
+      body.innerHTML = '';
+      const best = options[0];
+      options.slice(0, 3).forEach((opt, idx) => { // top-3 least waste options only
+        const tr = document.createElement('tr');
+        const optionCell = document.createElement('td');
+        optionCell.textContent = `Option ${idx + 1}`;
+        if (opt === best) {
+          optionCell.classList.add('option-best');
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = 'Least waste';
+          optionCell.appendChild(badge);
+        }
+        tr.appendChild(optionCell);
+
+        const td70 = document.createElement('td');
+        td70.textContent = fmt(opt.a);
+        tr.appendChild(td70);
+        const td100 = document.createElement('td');
+        td100.textContent = fmt(opt.b);
+        tr.appendChild(td100);
+        const tdTotal = document.createElement('td');
+        tdTotal.textContent = fmt(opt.total);
+        tr.appendChild(tdTotal);
+        const tdWaste = document.createElement('td');
+        tdWaste.textContent = fmt(opt.waste);
+        if (opt === best) tdWaste.style.fontWeight = '700';
+        tr.appendChild(tdWaste);
+        const tdWastePct = document.createElement('td');
+        tdWastePct.textContent = `${fmt(opt.wastePct * 100, 2)}%`;
+        if (opt === best) tdWastePct.style.fontWeight = '700';
+        tr.appendChild(tdWastePct);
+        const tdVials = document.createElement('td');
+        tdVials.textContent = fmt(opt.totalVials);
+        tr.appendChild(tdVials);
+
+        body.appendChild(tr);
+      });
+
+      table.style.display = 'table';
+      applyBtn.dataset.combo = JSON.stringify({ a: best.a, b: best.b });
+      applyBtn.disabled = true;
+      if (!ADVISORY_MODE) {
+        applyBtn.disabled = false;
+      }
+    }
+
+    $('mWeight').addEventListener('input', renderModal);
+    $('mDose').addEventListener('change', renderModal);
+
+    $('applyToForm').addEventListener('click', () => {
+      if (ADVISORY_MODE) return;
+      const combo = JSON.parse(
+        $('applyToForm').dataset.combo || '{"a":0,"b":0}'
+      );
+      $('vials70').value = combo.a;
+      $('vials100').value = combo.b;
+      closeModal();
+      updateDelta();
+    });
+
     updateInline();
   </script>
 </body>

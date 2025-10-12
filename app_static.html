@@ -3,48 +3,21 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>HCP Infusion Planner — GSK Theme (Final)</title>
+<title>HCP Infusion Planner — GSK Theme (Final v2)</title>
 <style>
   :root{
-    /* Brand (GSK-inspired) */
-    --brand:#FF6200;
-    --brand-600:#E55A00;
-    --brand-050:#FFF3E9;
-
-    /* Text & surfaces */
-    --text:#1B1B1B;
-    --muted:#6A6A6A;
-    --bg:#F7F7F7;
-    --card:#FFFFFF;
-    --field:#F2F2F2;
-    --border:#E6E6E6;
-
-    /* Status */
-    --green:#1f7a39;
-    --amber:#b55b00;
-    --red:#b00020;
-
-    /* Dose bar underfill */
-    --under:#222222;
-
-    /* Shadows */
-    --shadow:0 1px 2px rgba(0,0,0,.06);
-    --shadow-hover:0 2px 8px rgba(0,0,0,.10);
+    --brand:#FF6200; --brand-600:#E55A00; --brand-050:#FFF3E9;
+    --text:#1B1B1B; --muted:#6A6A6A; --bg:#F7F7F7; --card:#FFFFFF; --field:#F2F2F2; --border:#E6E6E6;
+    --green:#1f7a39; --amber:#b55b00; --red:#b00020; --under:#222222;
+    --shadow:0 1px 2px rgba(0,0,0,.06); --shadow-hover:0 2px 8px rgba(0,0,0,.10);
   }
-
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
   .wrap{max-width:1100px;margin:32px auto;padding:0 20px}
 
-  .infobar{
-    background:var(--brand-050);
-    color:#5A3100;border:1px solid #FFDCC4;border-radius:16px;
-    padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin:0 0 16px;
-  }
-  .infobar svg{flex:0 0 auto}
+  .infobar{background:var(--brand-050);color:#5A3100;border:1px solid #FFDCC4;border-radius:16px;
+    padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin:0 0 16px}
   .infobar a{color:var(--brand);font-weight:700;text-decoration:none}
-  .infobar a:hover{text-decoration:underline}
-
   .title{font-size:1.5rem;font-weight:800;margin:0 0 14px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:var(--shadow)}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px}
@@ -54,47 +27,35 @@
 
   .field{display:flex;flex-direction:column;gap:8px}
   .label{font-weight:700}
-  .subtle,.muted{color:var(--muted)}
+  .muted{color:var(--muted)}
   .ro{opacity:.85}
-
   .input-wrap{position:relative}
   .unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#555;font-weight:700}
 
   input[type="date"],input[type="number"],select{
-    width:100%;background:#FFF;border:1px solid var(--border);
-    border-radius:14px;padding:14px 12px;font-size:1rem;outline:none;transition:border-color .12s, box-shadow .12s
+    width:100%;background:#FFF;border:1px solid var(--border);border-radius:14px;padding:14px 12px;font-size:1rem;
+    outline:none;transition:border-color .12s, box-shadow .12s
   }
   input[type="date"]:hover,input[type="number"]:hover,select:hover{border-color:#D6D6D6}
-  input[type="date"]:focus,input[type="number"]:focus,select:focus{
-    border-color:var(--brand);box-shadow:0 0 0 3px rgba(255,98,0,.35)
-  }
+  input[type="date"]:focus,input[type="number"]:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(255,98,0,.35)}
   input[disabled],.ro{background:var(--field)}
-
-  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  .btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer;transition:box-shadow .12s, background-color .12s, border-color .12s}
+  .divider{height:1px;background:var(--border);margin:18px 0}
+  .btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer;transition:box-shadow .12s,background .12s,border-color .12s}
   .btn.brand{background:var(--brand);border-color:var(--brand);color:#fff}
   .btn.brand:hover{background:var(--brand-600);border-color:var(--brand-600);box-shadow:var(--shadow-hover)}
   .btn.secondary{background:#fff;border-color:var(--brand);color:var(--brand);font-weight:700}
-  .btn.secondary:hover{box-shadow:var(--shadow-hover)}
   .btn.ghost{background:#fff;border-color:var(--border);color:#444}
-  .btn.ghost:hover{box-shadow:var(--shadow-hover)}
-  .btn.block{display:block;width:100%;text-align:center}
-  .btn[disabled]{opacity:.5;cursor:not-allowed}
-
-  .icon-btn{display:inline-flex;align-items:center;gap:10px;height:44px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer;padding:0 12px}
-  .icon-btn:hover{box-shadow:var(--shadow-hover)}
-
-  .divider{height:1px;background:var(--border);margin:18px 0}
+  .btn.block{display:block;width:100%}
+  .icon-btn{display:inline-flex;align-items:center;gap:10px;height:44px;border-radius:10px;border:1px solid var(--border);background:#fff;padding:0 12px}
   .inline-summary{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .center{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
-
   .pill{display:inline-block;background:#fff;border:1px solid var(--brand);color:var(--brand);font-weight:700;border-radius:999px;padding:8px 12px;cursor:pointer}
-  .pill:focus{outline:0;box-shadow:0 0 0 3px rgba(255,98,0,.35)}
   .pill-green{background:#e8f5ec;border-color:var(--green);color:var(--green)}
   .pill-amber{background:#fff3e0;border-color:var(--amber);color:var(--amber)}
   .pill-red{background:#ffebee;border-color:var(--red);color:var(--red)}
 
+  /* Meter */
   .dosebar-wrap{margin-top:6px}
   .dosebar-label{font-size:.95rem;color:#333;margin-bottom:6px;font-weight:700}
   .bar{height:12px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
@@ -102,24 +63,23 @@
   .marker{position:absolute;top:-5px;bottom:-5px;width:2px;background:#111;opacity:.9}
   .marker-label{position:absolute;top:-22px;transform:translateX(-50%);font-size:.8rem;color:#111;font-weight:800;white-space:nowrap}
   .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.85rem;color:#444}
-  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
-  .dot-green{background:var(--green)}
-  .dot-amber{background:var(--amber)}
-  .dot-red{background:var(--red)}
-  .dot-under{background:var(--under)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  .dot-green{background:var(--green)} .dot-amber{background:var(--amber)} .dot-red{background:var(--red)} .dot-under{background:var(--under)}
   .dosebar-text{font-size:.95rem;margin-top:6px}
 
   .actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media (max-width:860px){.actions-grid{grid-template-columns:1fr}}
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--shadow)}
-  .cardlet:hover{box-shadow:var(--shadow-hover)}
 
+  /* Small inline TGA line */
+  .calc-hint{font-size:.9rem;color:var(--muted);margin-top:6px}
+
+  /* Modal */
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);align-items:center;justify-content:center;padding:20px;z-index:1000}
   .modal{width:min(880px,100%);background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
   .modal-hd{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--border)}
   .modal-bd{padding:14px 16px;max-height:70vh;overflow:auto}
   .modal-ft{display:flex;flex-direction:column;gap:10px;padding:12px 16px;border-top:1px solid var(--border)}
-
   [hidden]{display:none !important}
 </style>
 </head>
@@ -130,25 +90,22 @@
       <circle cx="12" cy="12" r="10" stroke="#FF6200" stroke-width="2"/>
       <path d="M12 7.5v.8M12 10.5v6" stroke="#FF6200" stroke-width="2" stroke-linecap="round"/>
     </svg>
-    <div>
-      Please review these details. If not correct, please call the MyeCare Program team on <strong>1800 140 272</strong>.
-    </div>
+    <div>Please review these details. If not correct, please call the MyeCare Program team on <strong>1800 140 272</strong>.</div>
   </div>
 
   <div class="title">Please answer the following question:</div>
 
   <div class="card">
-    <!-- Scheduling (locked) -->
+    <!-- Scheduling -->
     <div class="section-h">Scheduling</div>
     <p class="section-sub">These dates are locked by protocol.</p>
-
     <div class="grid">
       <div class="field">
-        <div class="label">What date did the previous infusion happen? <span class="subtle">*</span></div>
+        <div class="label">What date did the previous infusion happen? <span class="muted">*</span></div>
         <input id="prevDate" type="date" class="ro" value="2025-11-15" disabled aria-disabled="true"/>
       </div>
       <div class="field">
-        <div class="label">What date is the next infusion? <span class="subtle">*</span></div>
+        <div class="label">What date is the next infusion? <span class="muted">*</span></div>
         <input id="nextDate" type="date" class="ro" value="2026-08-01" disabled aria-disabled="true"/>
       </div>
     </div>
@@ -158,37 +115,29 @@
     <!-- Dose inputs -->
     <div class="section-h">Dose inputs</div>
     <p class="section-sub">Enter weight and confirm the dose regimen. Advisory only — verify with PI/local policy.</p>
-
     <div class="grid">
       <div class="field">
-        <div class="label">Confirm patient’s weight (kg) <span class="subtle">*</span></div>
+        <div class="label">Confirm patient’s weight (kg) <span class="muted">*</span></div>
         <div class="input-wrap">
           <input id="weight" type="number" min="0" step="0.1" placeholder="e.g., 91.3" aria-label="Patient weight in kilograms"/>
           <span class="unit">kg</span>
         </div>
       </div>
-
       <div class="field">
-        <div class="label">Confirm patient’s treatment dose <span class="subtle">*</span></div>
+        <div class="label">Confirm patient’s treatment dose <span class="muted">*</span></div>
         <select id="dose" aria-label="Dose regimen in mg per kg">
           <option value="" selected>-- Select dose regimen --</option>
           <option value="2.5">2.5 mg/kg (Start)</option>
           <option value="1.9">1.9 mg/kg (Reduced)</option>
         </select>
+        <!-- small inline TGA hint (no separate block) -->
+        <div id="calcHint" class="calc-hint" hidden></div>
       </div>
     </div>
 
     <div class="divider"></div>
 
-    <!-- Exact dose (compact, single card) -->
-    <div id="inline" class="inline-summary" hidden>
-      <div><span class="label">Exact required dose:</span> <span id="exactDose" class="mono">0.00</span> mg</div>
-      <div id="calcLine" class="muted" style="margin-top:4px"></div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Vial inputs (no section header/help; fluid) -->
+    <!-- Vials (fluid; no heading/help) -->
     <div class="grid">
       <div class="field">
         <div class="label">Confirm number of 70 mg vials</div>
@@ -217,12 +166,12 @@
       </div>
     </div>
 
-    <!-- Suggestion pills (rendered dynamically, sorted by least waste) -->
+    <!-- Suggestions (built and sorted dynamically) -->
     <div id="suggestionsRow" class="center" hidden style="margin-top:10px"></div>
 
     <div class="divider"></div>
 
-    <!-- Summary -->
+    <!-- Slim summary (will auto-hide once any vial is entered to avoid duplication) -->
     <div id="delta" class="inline-summary" aria-live="polite" hidden>
       <div id="deltaUnder" class="mono" hidden>⬇ Under by: 0.00 mg</div>
       <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0.00 mg (0.00%)</div>
@@ -231,7 +180,7 @@
 
     <div class="divider"></div>
 
-    <!-- Actions above reset -->
+    <!-- Actions -->
     <div class="actions-grid">
       <div class="cardlet" aria-labelledby="calcCardTitle">
         <div class="icon" aria-hidden="true">
@@ -246,7 +195,7 @@
         </div>
         <div>
           <h4 id="calcCardTitle" style="margin:0 0 4px">Dose & vial calculator</h4>
-          <div class="subtle">Opens as a sandbox (advisory). Does not change the form.</div>
+          <div class="muted">Opens as a sandbox (advisory). Does not change the form.</div>
           <div style="margin-top:10px">
             <button class="icon-btn" id="openCalc" title="Open dose & vial optimizer" aria-label="Open calculator">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -273,7 +222,7 @@
         </div>
         <div>
           <h4 style="margin:0 0 4px">View TGA official guidance</h4>
-          <div class="subtle">Always verify with PI before finalising.</div>
+          <div class="muted">Always verify with PI before finalising.</div>
           <div style="margin-top:10px">
             <a href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd" class="btn secondary" target="_blank" rel="noopener" aria-label="Open TGA official guidance">Open guidance</a>
           </div>
@@ -282,7 +231,6 @@
     </div>
 
     <div class="divider"></div>
-
     <button id="resetBtn" class="btn ghost block" aria-label="Reset form">Reset</button>
   </div>
 </main>
@@ -392,15 +340,13 @@
 </div>
 
 <script>
-/* ========= Utilities ========= */
+/* ===== Utilities ===== */
 const el  = id => document.getElementById(id);
 const fmt2 = n => Number(n).toFixed(2);
 const fmt0 = n => Math.round(Number(n)).toLocaleString();
 const EPS = 1e-9;
 
 function exactDose(weight, dose){ return (weight>0 && dose>0) ? (weight*dose) : 0; }
-
-/* Plans that meet/exceed E */
 function enumerateValidPlans(E, cap=10){
   const out=[];
   for(let a=0;a<=cap;a++){
@@ -408,8 +354,7 @@ function enumerateValidPlans(E, cap=10){
       const T = a*70 + b*100;
       if(T<=0) continue;
       if(T + EPS < E) continue;
-      const W = T - E;
-      const Wpct = T>0 ? (W/T*100) : 0;
+      const W = T - E; const Wpct = T>0 ? (W/T*100) : 0;
       out.push({a,b,total:T,waste:W,wastePct:Wpct});
     }
   }
@@ -421,319 +366,183 @@ function enumerateValidPlans(E, cap=10){
   });
   return out;
 }
+function singlesThatMeet(E, cap=10){ const n70=Math.min(Math.ceil(E/70),cap); const n100=Math.min(Math.ceil(E/100),cap); return {n70,n100}; }
+function wasteBandLabel(pct){ if(pct<=25) return 'Low waste'; if(pct<=50) return 'Moderate waste'; return 'High waste'; }
+function compText(a,b){ const p=[]; if(a>0)p.push(`70×${a}`); if(b>0)p.push(`100×${b}`); return p.length?p.join(' + '):'—'; }
 
-function singlesThatMeet(E, cap=10){
-  const n70  = Math.min(Math.ceil(E/70), cap);
-  const n100 = Math.min(Math.ceil(E/100), cap);
-  return { n70, n100 };
-}
-
-function wasteBandLabel(pct){
-  if (pct <= 25) return 'Low waste';
-  if (pct <= 50) return 'Moderate waste';
-  return 'High waste';
-}
-
-function compText(a,b){
-  const parts=[];
-  if (a>0) parts.push(`70×${a}`);
-  if (b>0) parts.push(`100×${b}`);
-  return parts.length? parts.join(' + ') : '—';
-}
-
-/* ========= DOM refs/state ========= */
+/* ===== DOM refs & state ===== */
 const inputs = {
-  weight: el('weight'),
-  dose:   el('dose'),
-  v70:    el('v70'),
-  v100:   el('v100'),
-
-  inline:      el('inline'),
-  calcLine:    el('calcLine'),
-  exactDose:   el('exactDose'),
-
-  doseBarWrap:  el('doseBarWrap'),
-  doseBarFill:  el('doseBarFill'),
-  doseBarMarker:el('doseBarMarker'),
-  doseBarMarkerLabel: el('doseBarMarkerLabel'),
-  doseBarText:  el('doseBarText'),
-
+  weight: el('weight'), dose: el('dose'), v70: el('v70'), v100: el('v100'),
+  calcHint: el('calcHint'),
+  doseBarWrap: el('doseBarWrap'), doseBarFill: el('doseBarFill'),
+  doseBarMarker: el('doseBarMarker'), doseBarMarkerLabel: el('doseBarMarkerLabel'), doseBarText: el('doseBarText'),
   suggestionsRow: el('suggestionsRow'),
-
-  delta:     el('delta'),
-  deltaUnder:el('deltaUnder'),
-  deltaOk:   el('deltaOk'),
-
-  openCalc: el('openCalc'),
-  resetBtn: el('resetBtn')
+  delta: el('delta'), deltaUnder: el('deltaUnder'), deltaOk: el('deltaOk'),
+  openCalc: el('openCalc'), resetBtn: el('resetBtn')
 };
-
 const modal = {
-  backdrop: el('backdrop'),
-  close:    el('closeModal'),
-  mWeight:  el('mWeight'),
-  mDose:    el('mDose'),
-  mCalcLine:el('mCalcLine'),
-  mExact:   el('mExact'),
-  results:  document.querySelector('#results tbody'),
-  maxVialText: el('maxVialText'),
-  apply:    el('apply')
+  backdrop: el('backdrop'), close: el('closeModal'),
+  mWeight: el('mWeight'), mDose: el('mDose'),
+  mCalcLine: el('mCalcLine'), mExact: el('mExact'),
+  results: document.querySelector('#results tbody'), maxVialText: el('maxVialText'), apply: el('apply')
 };
-
 const choice = {
-  backdrop:    el('choiceBackdrop'),
-  doseLine:    el('doseLine'),
-  exactLine:   el('exactLine'),
-  suggestSplit:el('suggestSplit'),
-  suggestWaste:el('suggestWaste'),
-  suggestStatus:el('suggestStatus'),
-  apply:       el('choiceApply'),
-  close:       el('choiceClose')
+  backdrop: el('choiceBackdrop'), doseLine: el('doseLine'), exactLine: el('exactLine'),
+  suggestSplit: el('suggestSplit'), suggestWaste: el('suggestWaste'), suggestStatus: el('suggestStatus'),
+  apply: el('choiceApply'), close: el('choiceClose')
 };
+const state = { weight:0, dose:0, E:0, cap:10 };
 
-const state = {
-  weight: 0,
-  dose:   0,
-  E:      0,
-  cap:    10
-};
-
-/* ========= Init/Reset ========= */
+/* ===== Init/Reset ===== */
 function resetForm(){
-  inputs.weight.value = '';
-  inputs.dose.value   = '';
-  inputs.v70.value    = 0;
-  inputs.v100.value   = 0;
-
-  state.weight = 0;
-  state.dose   = 0;
-  state.E      = 0;
-
-  inputs.inline.hidden        = true;
-  inputs.doseBarWrap.hidden   = true;
-  inputs.suggestionsRow.hidden= true;
-  inputs.delta.hidden         = true;
-  inputs.suggestionsRow.innerHTML = '';
-
-  modal.mWeight.value = '';
-  modal.mDose.value   = '';
-  modal.maxVialText.textContent = `Max vial option: ${state.cap}`;
+  inputs.weight.value=''; inputs.dose.value=''; inputs.v70.value=0; inputs.v100.value=0;
+  state.weight=0; state.dose=0; state.E=0;
+  inputs.calcHint.hidden = true;
+  inputs.doseBarWrap.hidden=true; inputs.suggestionsRow.hidden=true; inputs.suggestionsRow.innerHTML='';
+  inputs.delta.hidden=true; inputs.deltaUnder.hidden=true; inputs.deltaOk.hidden=true;
+  modal.mWeight.value=''; modal.mDose.value=''; modal.maxVialText.textContent=`Max vial option: ${state.cap}`;
   refreshModal();
 }
 inputs.resetBtn.addEventListener('click', resetForm);
 
-/* ========= Calculator modal ========= */
-inputs.openCalc.addEventListener('click', () => {
-  refreshModal();
-  modal.backdrop.style.display='flex';
-});
+/* ===== Calculator modal ===== */
+inputs.openCalc.addEventListener('click', ()=>{ refreshModal(); modal.backdrop.style.display='flex'; });
 modal.close.addEventListener('click', ()=> modal.backdrop.style.display='none');
 modal.backdrop.addEventListener('click',(e)=>{ if(e.target===modal.backdrop) modal.backdrop.style.display='none'; });
-
 ['input','change'].forEach(evt=>{
   modal.mWeight.addEventListener(evt, refreshModal);
   modal.mDose.addEventListener(evt, refreshModal);
 });
-
 function refreshModal(){
-  const w = Number(modal.mWeight.value||0);
-  const d = Number(modal.mDose.value||0);
-  const ok = (w>0 && d>0);
-  const E = ok ? exactDose(w,d) : 0;
-
-  modal.mCalcLine.textContent = ok
-    ? `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(E)} mg`
-    : 'Set weight and dose to view options.';
+  const w=Number(modal.mWeight.value||0), d=Number(modal.mDose.value||0); const ok=(w>0 && d>0); const E= ok? exactDose(w,d):0;
+  modal.mCalcLine.textContent = ok? `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(E)} mg` : 'Set weight and dose to view options.';
   modal.mExact.textContent = fmt2(E);
-
-  modal.results.innerHTML = '';
+  modal.results.innerHTML='';
   if(ok){
-    const options = enumerateValidPlans(E, state.cap).slice(0,3);
+    const options=enumerateValidPlans(E,state.cap).slice(0,3);
     options.forEach((o,idx)=>{
-      const tr = document.createElement('tr');
-      if(idx===0) tr.style.background='#faf7f8';
-      tr.innerHTML = `
+      const tr=document.createElement('tr'); if(idx===0) tr.style.background='#faf7f8';
+      tr.innerHTML=`
         <td style="border:1px solid var(--border);padding:8px 10px">Option ${idx+1}${idx===0?' (Least waste)':''}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${compText(o.a,o.b)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt0(o.total)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt2(o.waste)}</td>
-        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.wastePct.toFixed(2)}%</td>
-      `;
+        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.wastePct.toFixed(2)}%</td>`;
       modal.results.appendChild(tr);
     });
   }
-  modal.apply.disabled = true;
+  modal.apply.disabled=true;
 }
 
-/* ========= Main refresh ========= */
+/* ===== Main refresh ===== */
 ['input','change'].forEach(evt=>{
   inputs.weight.addEventListener(evt, refreshMain);
   inputs.dose.addEventListener(evt, refreshMain);
-  inputs.v70.addEventListener(evt, ()=> { updateDoseBar(); refreshDelta(); });
-  inputs.v100.addEventListener(evt, ()=> { updateDoseBar(); refreshDelta(); });
+  inputs.v70.addEventListener(evt, ()=>{ updateDoseBar(); refreshDelta(); });
+  inputs.v100.addEventListener(evt, ()=>{ updateDoseBar(); refreshDelta(); });
 });
-
 function refreshMain(){
-  const w = Number(inputs.weight.value||0);
-  const d = Number(inputs.dose.value||0);
-  const ok = (w>0 && d>0);
+  const w=Number(inputs.weight.value||0), d=Number(inputs.dose.value||0); const ok=(w>0 && d>0);
+  state.weight=w; state.dose=d; state.E= ok? exactDose(w,d):0;
 
-  state.weight = w;
-  state.dose   = d;
-  state.E      = ok ? exactDose(w,d) : 0;
+  // Small inline TGA line
+  if(ok){
+    inputs.calcHint.hidden=false;
+    inputs.calcHint.innerHTML = `Based on TGA guideline — exact dose: <b>${fmt2(state.E)} mg</b> (${fmt2(state.dose)} mg/kg × ${fmt2(state.weight)} kg).`;
+  } else {
+    inputs.calcHint.hidden=true;
+  }
 
-  inputs.inline.hidden = !ok;
   inputs.doseBarWrap.hidden = !ok;
 
+  // Suggestions
   if(ok){
-    inputs.exactDose.textContent = fmt2(state.E);
-    inputs.calcLine.textContent  = `Based on TGA guideline: ${fmt2(state.dose)} mg/kg × ${fmt2(state.weight)} kg = ${fmt2(state.E)} mg`;
-
-    // Build candidate pills:
     const options = enumerateValidPlans(state.E, state.cap);
-
-    // Mixed: first plan with at least one 70 and one 100
-    const mixed = options.find(o => o.a >= 1 && o.b >= 1) || null;
-
-    // Singles:
+    const mixed = options.find(o => o.a>=1 && o.b>=1) || null;
     const singles = singlesThatMeet(state.E, state.cap);
     const only70  = { a: singles.n70,  b: 0, total: singles.n70*70 };
     const only100 = { a: 0,            b: singles.n100, total: singles.n100*100 };
-
-    // Waste calcs:
-    const calcCand = c => {
-      const waste = c.total - state.E;
-      const wastePct = c.total>0 ? (waste/c.total*100) : 0;
-      return { ...c, waste, wastePct };
-    };
-
-    const candidates = [];
-    if (mixed) candidates.push(calcCand({ kind:'mixed', a:mixed.a, b:mixed.b, total:mixed.total }));
-    candidates.push(calcCand({ kind:'70', a:only70.a, b:0, total:only70.total }));
-    candidates.push(calcCand({ kind:'100', a:0, b:only100.b, total:only100.total }));
-
-    // Sort by least waste% left→right
+    const calcCand = c => { const waste=c.total-state.E; const wastePct=c.total>0?(waste/c.total*100):0; return {...c,waste,wastePct}; };
+    const candidates=[]; if(mixed) candidates.push(calcCand({kind:'mixed',a:mixed.a,b:mixed.b,total:mixed.total}));
+    candidates.push(calcCand({kind:'70',a:only70.a,b:0,total:only70.total}));
+    candidates.push(calcCand({kind:'100',a:0,b:only100.b,total:only100.total}));
     candidates.sort((x,y)=> x.wastePct - y.wastePct);
 
-    // Render pills dynamically
-    const row = inputs.suggestionsRow;
-    row.innerHTML = '';
+    const row=inputs.suggestionsRow; row.innerHTML='';
     candidates.forEach(c=>{
-      const btn = document.createElement('button');
-      btn.className = 'pill';
-      // colour by band
-      if (c.wastePct <= 25) btn.classList.add('pill-green');
-      else if (c.wastePct <= 50) btn.classList.add('pill-amber');
-      else btn.classList.add('pill-red');
-
-      const label = c.kind==='mixed' ? 'Mixed' : (c.kind==='70' ? '70-only' : '100-only');
+      const btn=document.createElement('button'); btn.className='pill';
+      if(c.wastePct<=25) btn.classList.add('pill-green'); else if(c.wastePct<=50) btn.classList.add('pill-amber'); else btn.classList.add('pill-red');
+      const label=c.kind==='mixed'?'Mixed':(c.kind==='70'?'70-only':'100-only');
       btn.textContent = `${label} — ${compText(c.a,c.b)} • Waste ${fmt2(c.waste)} mg (${c.wastePct.toFixed(2)}%)`;
-      btn.setAttribute('aria-label', `Open details for ${label}`);
-      btn.addEventListener('click', ()=> openSuggestionPopup(c.a, c.b, label));
+      btn.setAttribute('aria-label',`Open details for ${label}`);
+      btn.addEventListener('click',()=> openSuggestionPopup(c.a,c.b,label));
       row.appendChild(btn);
     });
-
-    row.hidden = false;
-  }else{
-    inputs.exactDose.textContent = '0.00';
-    inputs.calcLine.textContent  = '';
-    inputs.suggestionsRow.hidden = true;
-    inputs.suggestionsRow.innerHTML = '';
+    row.hidden=false;
+  } else {
+    inputs.suggestionsRow.hidden=true; inputs.suggestionsRow.innerHTML='';
   }
 
   updateDoseBar();
   refreshDelta();
 }
 
-/* ========= Dose meter ========= */
+/* ===== Meter ===== */
 function updateDoseBar(){
-  const E = state.E;
-  if(!(E>0)){ inputs.doseBarWrap.hidden = true; return; }
+  const E=state.E; if(!(E>0)){ inputs.doseBarWrap.hidden=true; return; }
+  const a=Number(inputs.v70.value||0), b=Number(inputs.v100.value||0); const T=a*70+b*100;
+  let scaleMax=Math.max(E,T,1)*1.2;
+  const fillPct=Math.min(100,Math.max(0,(T/scaleMax)*100));
+  const markerPct=Math.min(100,Math.max(0,(E/scaleMax)*100));
+  inputs.doseBarFill.style.width=`${fillPct.toFixed(1)}%`;
+  inputs.doseBarMarker.style.left=`${markerPct.toFixed(1)}%`;
+  inputs.doseBarMarkerLabel.style.left=`${markerPct.toFixed(1)}%`;
 
-  const a = Number(inputs.v70.value||0);
-  const b = Number(inputs.v100.value||0);
-  const T = a*70 + b*100;
-
-  let scaleMax = Math.max(E, T, 1) * 1.2;
-  const fillPct   = Math.min(100, Math.max(0, (T/scaleMax)*100));
-  const markerPct = Math.min(100, Math.max(0, (E/scaleMax)*100));
-
-  inputs.doseBarFill.style.width = `${fillPct.toFixed(1)}%`;
-  inputs.doseBarMarker.style.left = `${markerPct.toFixed(1)}%`;
-  inputs.doseBarMarkerLabel.style.left = `${markerPct.toFixed(1)}%`;
-
-  if (T + EPS < E){
-    inputs.doseBarFill.style.background = getComputedStyle(document.documentElement).getPropertyValue('--under').trim() || '#222';
-    inputs.doseBarText.textContent = `Under by ${fmt2(E - T)} mg`;
-  } else {
-    const W = T - E;
-    const Wpct = T>0 ? (W/T*100) : 0;
-    let color = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#1f7a39';
-    if (Wpct > 50)      color = getComputedStyle(document.documentElement).getPropertyValue('--red').trim()   || '#b00020';
-    else if (Wpct > 25) color = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#b55b00';
-    inputs.doseBarFill.style.background = color;
-    inputs.doseBarText.textContent = `Total ${fmt0(T)} mg • Waste ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
+  if(T + EPS < E){
+    inputs.doseBarFill.style.background=getComputedStyle(document.documentElement).getPropertyValue('--under').trim()||'#222';
+    inputs.doseBarText.textContent=`Under by ${fmt2(E-T)} mg`;
+  }else{
+    const W=T-E; const Wpct=T>0?(W/T*100):0;
+    let color=getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#1f7a39';
+    if(Wpct>50) color=getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#b00020';
+    else if(Wpct>25) color=getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()||'#b55b00';
+    inputs.doseBarFill.style.background=color;
+    inputs.doseBarText.textContent=`Total ${fmt0(T)} mg • Waste ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
   }
-
-  inputs.doseBarWrap.hidden = false;
+  inputs.doseBarWrap.hidden=false;
 }
 
-/* ========= Suggestion popup ========= */
-function openSuggestionPopup(a, b, label){
-  const E = state.E;
-  const T = a*70 + b*100;
-
-  choice.doseLine.textContent  = `Dose: ${fmt2(state.dose)} mg/kg · Weight: ${fmt2(state.weight)} kg`;
-  choice.exactLine.textContent = `Exact required: ${fmt2(E)} mg`;
-  choice.suggestSplit.textContent = `${label}: ${compText(a,b)} = ${fmt0(T)} mg`;
-
-  if (T + EPS < E){
-    const underBy = E - T;
-    choice.suggestWaste.textContent  = `Under by: ${fmt2(underBy)} mg`;
-    choice.suggestStatus.textContent = `Status: UNDER TARGET`;
-  } else {
-    const W = T - E;
-    const Wpct = T>0 ? (W/T*100) : 0;
-    choice.suggestWaste.textContent  = `Waste: ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
-    choice.suggestStatus.textContent = `Status: ${wasteBandLabel(Wpct)}`;
+/* ===== Suggestion popup ===== */
+function openSuggestionPopup(a,b,label){
+  const E=state.E; const T=a*70+b*100;
+  choice.doseLine.textContent=`Dose: ${fmt2(state.dose)} mg/kg · Weight: ${fmt2(state.weight)} kg`;
+  choice.exactLine.textContent=`Exact required: ${fmt2(E)} mg`;
+  choice.suggestSplit.textContent=`${label}: ${compText(a,b)} = ${fmt0(T)} mg`;
+  if(T + EPS < E){
+    const underBy=E-T; choice.suggestWaste.textContent=`Under by: ${fmt2(underBy)} mg`; choice.suggestStatus.textContent='Status: UNDER TARGET';
+  }else{
+    const W=T-E; const Wpct=T>0?(W/T*100):0;
+    choice.suggestWaste.textContent=`Waste: ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
+    choice.suggestStatus.textContent=`Status: ${wasteBandLabel(Wpct)}`;
   }
   choice.backdrop.style.display='flex';
 }
 choice.backdrop.addEventListener('click',(e)=>{ if(e.target===choice.backdrop) choice.backdrop.style.display='none'; });
-choice.close.addEventListener('click', ()=> choice.backdrop.style.display='none');
+choice.close.addEventListener('click',()=> choice.backdrop.style.display='none');
 
-/* ========= Summary ========= */
+/* ===== Slim summary (hide when vials entered) ===== */
 function refreshDelta(){
-  const a = Number(inputs.v70.value||0);
-  const b = Number(inputs.v100.value||0);
-  const T = a*70 + b*100;
-  const E = state.E;
-
-  const engaged = (a>0 || b>0);
-  inputs.delta.hidden = !engaged;
-
-  if(!engaged){
-    inputs.deltaUnder.hidden = true;
-    inputs.deltaOk.hidden    = true;
-    return;
-  }
-
-  if (T + EPS < E){
-    const underBy = E - T;
-    inputs.deltaUnder.hidden = false;
-    inputs.deltaOk.hidden    = true;
-    inputs.deltaUnder.textContent = `⬇ Under by: ${fmt2(underBy)} mg`;
-  } else {
-    const W = T - E;
-    const Wpct = T>0 ? (W/T*100) : 0;
-
-    inputs.deltaUnder.hidden = true;
-    inputs.deltaOk.hidden    = false;
-    inputs.deltaOk.textContent = `Total ordered: ${fmt0(T)} mg · Waste: ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
-  }
+  const a=Number(inputs.v70.value||0), b=Number(inputs.v100.value||0), T=a*70+b*100, E=state.E;
+  const engaged=(a>0 || b>0);
+  if(engaged || !(E>0)){ inputs.delta.hidden=true; return; }  // avoid duplication when vials entered
+  // When no vials yet, show a simple "Under by" prompt relative to exact dose
+  inputs.delta.hidden=false;
+  inputs.deltaUnder.hidden=false;
+  inputs.deltaOk.hidden=true;
+  inputs.deltaUnder.textContent=`⬇ Under by: ${fmt2(E - T)} mg`;
 }
 
-/* ========= Boot ========= */
+/* Boot */
 document.addEventListener('DOMContentLoaded', resetForm);
 </script>
 </body>

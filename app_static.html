@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>HCP Infusion Planner — Advisory Mode (Sustainability)</title>
+<title>HCP Infusion Planner — Waste-only (Exact Dose)</title>
 <style>
   :root{
     --brand:#8F0E1A;
@@ -13,7 +13,10 @@
     --card:#ffffff;
     --field:#f2f2f2;
     --border:#e6e6e6;
-    --radius:16px;
+    --green:#1f7a39;     /* Low waste (≤25%) */
+    --amber:#b55b00;     /* Moderate (25–50%) */
+    --red:#b00020;       /* High (>50%) */
+    --under:#222222;     /* Under target indicator colour */
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
@@ -47,11 +50,23 @@
   .pill{display:inline-block;background:#fff;border:1px solid var(--brand);color:var(--brand);font-weight:700;border-radius:999px;padding:6px 10px;cursor:pointer}
   .pill:focus{outline:3px solid rgba(143,14,26,.18)}
   .delta{display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff}
-  .sust-card{margin-top:6px;border:1px dashed var(--brand);border-radius:12px;padding:10px 12px;background:#fff}
   .k{font-weight:700}
   .actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media (max-width:860px){.actions-grid{grid-template-columns:1fr}}
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+
+  /* Waste bar + legend */
+  .waste-wrap{margin-top:6px}
+  .waste-label{font-size:.95rem;color:#333;margin-bottom:6px}
+  .bar{height:10px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
+  .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--green);transition:width .2s ease, background-color .2s ease}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.85rem;color:#444}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .dot-green{background:var(--green)}
+  .dot-amber{background:var(--amber)}
+  .dot-red{background:var(--red)}
+  .dot-under{background:var(--under)}
+  .waste-text{font-size:.95rem;margin-top:6px}
 
   /* Modal primitives */
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);align-items:center;justify-content:center;padding:20px;z-index:1000}
@@ -59,7 +74,6 @@
   .modal-hd{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--border)}
   .modal-bd{padding:14px 16px;max-height:70vh;overflow:auto}
   .modal-ft{display:flex;flex-direction:column;gap:10px;padding:12px 16px;border-top:1px solid var(--border)}
-  .caption{font-size:.9rem;color:#444}
   [hidden]{display:none !important}
 </style>
 </head>
@@ -159,7 +173,7 @@
     <!-- Inline exact calculation (appears when weight+dose valid) -->
     <div id="inline" class="inline-summary" hidden>
       <div id="calcLine" class="muted"></div>
-      <div style="margin-top:2px" class="muted">(exact to 2 dp; vial ordering uses rounded-up requirement)</div>
+      <div style="margin-top:2px" class="muted">Plans must meet or exceed the exact required dose.</div>
       <div style="margin-top:6px"><span class="k">Exact required dose:</span> <span id="exactDose" class="mono">0.00</span> mg</div>
     </div>
 
@@ -186,20 +200,25 @@
 
     <div class="divider"></div>
 
-    <!-- Required/Summary + Sustainability card -->
+    <!-- Summary + Waste meter -->
     <div id="delta" class="delta" aria-live="polite" hidden>
-      <div id="requiredLine" class="mono">Required (rounded): 0 mg</div>
-      <div id="deltaUnder" class="mono" hidden>⬇ Under by: 0 mg</div>
-      <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Unused: 0 mg</div>
+      <div id="deltaUnder" class="mono" hidden>⬇ Under by: 0.00 mg</div>
+      <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0.00 mg (0.00%)</div>
 
-      <!-- Sustainability card focuses on "improvement vs current selection" -->
-      <div id="sustCard" class="sust-card" hidden>
-        <div class="k" id="sustHeadline">Sustainability: improvement vs current selection</div>
-        <div id="sustLinePrimary" class="mono" style="margin-top:4px"></div>
-        <div id="sustLineHint" class="muted" style="margin-top:2px"></div>
+      <!-- Waste meter -->
+      <div id="wasteWrap" class="waste-wrap" hidden>
+        <div class="waste-label">Waste % (current selection)</div>
+        <div class="bar"><div id="wasteFill" class="bar-fill"></div></div>
+        <div id="wasteText" class="waste-text mono"></div>
+        <div class="legend">
+          <span><span class="dot dot-green"></span>Low (≤25%)</span>
+          <span><span class="dot dot-amber"></span>Moderate (25–50%)</span>
+          <span><span class="dot dot-red"></span>High (>50%)</span>
+          <span><span class="dot dot-under"></span>Under target</span>
+        </div>
       </div>
 
-      <div class="muted">Advisory only. Final clinical decisions rest with the HCP. Check PI.</div>
+      <div class="muted">Advisory only. Verify with PI / local policy.</div>
     </div>
 
     <div class="divider"></div>
@@ -207,7 +226,7 @@
   </div>
 </main>
 
-<!-- Calculator Modal (opens on load, sandbox only) -->
+<!-- Calculator Modal (manual open; sandbox only) -->
 <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <div class="modal-hd">
@@ -224,8 +243,8 @@
         <div class="k" style="margin-bottom:6px">Method</div>
         <ul style="margin:0 0 0 18px; padding:0; color:#444">
           <li>Vial strengths: 70 mg and 100 mg.</li>
-          <li>Lists combinations ≥ required dose, sorted by least unused first.</li>
-          <li>Tie-breakers: fewer total vials, then lower total mg.</li>
+          <li>Lists combinations that meet or exceed the exact required dose.</li>
+          <li>Sorted by least <b>waste</b> first; tie-breakers: fewer total vials, then lower total mg.</li>
         </ul>
       </div>
       <div class="grid">
@@ -254,17 +273,17 @@
         <div style="margin-top:6px"><span class="k">Exact required dose:</span> <span id="mExact" class="mono">0.00</span> mg</div>
       </div>
 
-      <div class="caption" style="margin-top:8px">Top 3 least-unused options</div>
+      <div style="margin-top:8px" class="muted">Top 3 least-waste options</div>
       <div style="margin-top:6px;overflow:auto">
-        <table id="results" style="border-collapse:collapse;width:100%;min-width:520px">
+        <table id="results" style="border-collapse:collapse;width:100%;min-width:560px">
           <thead>
             <tr>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:left">Option</th>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">70 mg</th>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">100 mg</th>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Total (mg)</th>
-              <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Unused (mg)</th>
-              <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Unused %</th>
+              <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Waste (mg)</th>
+              <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Waste %</th>
             </tr>
           </thead>
           <tbody><!-- rows injected --></tbody>
@@ -278,49 +297,32 @@
   </div>
 </div>
 
-<!-- Suggestion Popup (reworked narrative, full-width TGA button) -->
+<!-- Suggestion Popup (Waste-only, no rounding) -->
 <div id="choiceBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="modal" style="max-width:720px">
     <div class="modal-bd">
-      <!-- 1) You selected -->
+      <!-- Title -->
       <div class="inline-summary">
-        <div class="k">You selected</div>
-        <div id="youSelected" class="mono" style="margin-top:4px">None yet</div>
+        <div class="k">You are about to select this option</div>
       </div>
 
       <div class="divider"></div>
 
-      <!-- 2) Your dose regimen -->
+      <!-- Dose regimen -->
       <div class="inline-summary">
-        <div class="k">Your dose regimen</div>
+        <div class="k">Dose regimen</div>
         <div id="doseLine" class="mono" style="margin-top:4px"></div>
         <div id="exactLine" class="mono" style="margin-top:2px"></div>
       </div>
 
       <div class="divider"></div>
 
-      <!-- 3) Our suggestion -->
+      <!-- About to select -->
       <div class="inline-summary">
-        <div class="k" id="suggestTitle">Our suggestion</div>
+        <div class="k">About to select</div>
         <div id="suggestSplit" class="mono" style="margin-top:4px"></div>
-        <div id="suggestUnused" class="mono" style="margin-top:2px"></div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 4) Sustainability impact -->
-      <div class="inline-summary">
-        <div class="k">Sustainability impact</div>
-        <div id="impactVsCurrent" class="mono" style="margin-top:4px"></div>
-        <div id="impactVsBaseline" class="muted" style="margin-top:2px"></div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 5) Why choose this -->
-      <div class="inline-summary">
-        <div class="k">Why choose this</div>
-        <div id="whyLine" style="margin-top:4px;color:#444"></div>
+        <div id="suggestWaste" class="mono" style="margin-top:2px"></div>
+        <div id="suggestStatus" class="mono" style="margin-top:2px;color:#444"></div>
       </div>
     </div>
     <div class="modal-ft">
@@ -340,123 +342,110 @@
 
 <script>
 /* =========================
-   Utilities & state
+   Utilities & state (waste-only)
 ========================= */
-const el = id => document.getElementById(id);
-const fmt2 = n => Number(n).toFixed(2);
-const fmt0 = n => Math.round(Number(n)).toLocaleString();
+const el  = id => document.getElementById(id);
+const fmt2 = n => Number(n).toFixed(2);   // for E, W, under amounts
+const fmt0 = n => Math.round(Number(n)).toLocaleString(); // for totals (mg integers)
+const EPS = 1e-9;
 
-function computeExact(weight, dose){ return (weight>0 && dose>0) ? weight*dose : 0; }
-function roundedRequired(exact){ return Math.ceil(exact); }
+function exactDose(weight, dose){ return (weight>0 && dose>0) ? (weight*dose) : 0; }
 
-function enumerateOptions(exact, cap=10){
+/* Enumerate only plans that MEET/EXCEED exact dose; sort by least waste, then fewer vials, then lower total mg */
+function enumerateValidPlans(E, cap=10){
   const out=[];
   for(let a=0;a<=cap;a++){
     for(let b=0;b<=cap;b++){
-      const total = a*70 + b*100;
-      if(total<=0) continue;
-      if(total < exact) continue;
-      const unused = total - exact;
-      const pct = total>0 ? (unused/total*100) : 0;
-      out.push({a,b,total,unused,pct});
+      const T = a*70 + b*100;
+      if(T<=0) continue;
+      if(T + EPS < E) continue; // must meet/exceed exact required
+      const W = T - E;
+      const Wpct = T>0 ? (W/T*100) : 0;
+      out.push({a,b,total:T,waste:W,wastePct:Wpct});
     }
   }
   out.sort((x,y)=>{
-    if (x.unused!==y.unused) return x.unused - y.unused;
-    const vx = (x.a+x.b), vy=(y.a+y.b);
-    if (vx!==vy) return vx - vy;
-    return x.total - y.total;
+    if (Math.abs(x.waste - y.waste) > 1e-9) return x.waste - y.waste;               // least waste
+    const vx = (x.a + x.b), vy = (y.a + y.b);
+    if (vx !== vy) return vx - vy;                                                   // fewer vials
+    return x.total - y.total;                                                        // lower total mg
   });
   return out;
 }
-function bestSingles(exact, cap=10){
-  const n70 = Math.min(Math.ceil(exact/70), cap);
-  const n100 = Math.min(Math.ceil(exact/100), cap);
+
+/* Singles that meet/exceed E */
+function singlesThatMeet(E, cap=10){
+  const n70  = Math.min(Math.ceil(E/70), cap);
+  const n100 = Math.min(Math.ceil(E/100), cap);
   return { n70, n100 };
 }
-function baselineSingleStrength(exact, cap=10){
-  const a0 = Math.min(Math.ceil(exact/70), cap);
-  const b0 = Math.min(Math.ceil(exact/100), cap);
-  const U70 = (70*a0) - exact;
-  const U100 = (100*b0) - exact;
-  if (U70 <= U100) return { kind:'70-only', a:a0, b:0, total:70*a0, unused:U70 };
-  return { kind:'100-only', a:0, b:b0, total:100*b0, unused:U100 };
-}
-function improvementVsCurrent(U_current, U_plan){
-  if (U_current <= 0 && U_plan <= 0) return {msg:'on par with your current selection', avoided:0, pct:0, status:'onpar'};
-  if (U_current <= 0 && U_plan > 0) return {msg:'less sustainable than your current selection', avoided:0, pct:0, status:'worse'};
-  const avoided = Math.max(0, U_current - U_plan);
-  if (avoided === 0) return {msg:'on par with your current selection', avoided:0, pct:0, status:'onpar'};
-  const pct = (avoided / U_current) * 100;
-  return {msg:`avoided ${fmt0(avoided)} mg (▲${Math.round(pct)}%)`, avoided, pct, status:'better'};
+
+/* Waste band label by % */
+function wasteBandLabel(pct){
+  if (pct <= 25) return 'Low waste';
+  if (pct <= 50) return 'Moderate waste';
+  return 'High waste';
 }
 
 /* -------------------------
-   Global state
+   DOM refs & state
 ------------------------- */
 const inputs = {
   weight: el('weight'),
-  dose: el('dose'),
-  v70: el('v70'),
-  v100: el('v100'),
+  dose:   el('dose'),
+  v70:    el('v70'),
+  v100:   el('v100'),
 
-  inline: el('inline'),
-  calcLine: el('calcLine'),
-  exactDose: el('exactDose'),
+  inline:      el('inline'),
+  calcLine:    el('calcLine'),
+  exactDose:   el('exactDose'),
 
   suggestionsRow: el('suggestionsRow'),
   sugMixed: el('sugMixed'),
-  sug70: el('sug70'),
-  sug100: el('sug100'),
+  sug70:   el('sug70'),
+  sug100:  el('sug100'),
 
-  delta: el('delta'),
-  requiredLine: el('requiredLine'),
-  deltaUnder: el('deltaUnder'),
-  deltaOk: el('deltaOk'),
+  delta:     el('delta'),
+  deltaUnder:el('deltaUnder'),
+  deltaOk:   el('deltaOk'),
 
-  // Sust card
-  sustCard: el('sustCard'),
-  sustHeadline: el('sustHeadline'),
-  sustLinePrimary: el('sustLinePrimary'),
-  sustLineHint: el('sustLineHint'),
+  wasteWrap: el('wasteWrap'),
+  wasteFill: el('wasteFill'),
+  wasteText: el('wasteText'),
 
   openCalc: el('openCalc'),
   resetBtn: el('resetBtn')
 };
+
 const modal = {
   backdrop: el('backdrop'),
-  close: el('closeModal'),
-  mWeight: el('mWeight'),
-  mDose: el('mDose'),
-  mCalcLine: el('mCalcLine'),
-  mExact: el('mExact'),
-  results: document.querySelector('#results tbody'),
+  close:    el('closeModal'),
+  mWeight:  el('mWeight'),
+  mDose:    el('mDose'),
+  mCalcLine:el('mCalcLine'),
+  mExact:   el('mExact'),
+  results:  document.querySelector('#results tbody'),
   maxVialText: el('maxVialText'),
-  apply: el('apply')
+  apply:    el('apply')
 };
+
 const choice = {
-  backdrop: el('choiceBackdrop'),
-  youSelected: el('youSelected'),
-  doseLine: el('doseLine'),
-  exactLine: el('exactLine'),
-  suggestTitle: el('suggestTitle'),
-  suggestSplit: el('suggestSplit'),
-  suggestUnused: el('suggestUnused'),
-  impactVsCurrent: el('impactVsCurrent'),
-  impactVsBaseline: el('impactVsBaseline'),
-  whyLine: el('whyLine'),
-  apply: el('choiceApply'),
-  close: el('choiceClose')
+  backdrop:    el('choiceBackdrop'),
+  doseLine:    el('doseLine'),
+  exactLine:   el('exactLine'),
+  suggestSplit:el('suggestSplit'),
+  suggestWaste:el('suggestWaste'),
+  suggestStatus:el('suggestStatus'),
+  apply:       el('choiceApply'),
+  close:       el('choiceClose')
 };
 
 const state = {
   weight: 0,
-  dose: 0,
-  exact: 0,
-  rounded: 0,
-  cap: 10,
-  bestMix: {a:0,b:0,total:0,unused:0,pct:0},
-  lastPreview: null // {kind, a, b, total, unused}
+  dose:   0,
+  E:      0,       // exact required dose
+  cap:    10,
+  best:   null     // current best mixed plan (least waste)
 };
 
 /* =========================
@@ -464,32 +453,30 @@ const state = {
 ========================= */
 function resetForm(){
   inputs.weight.value = '';
-  inputs.dose.value = '';
-  inputs.v70.value = 0;
-  inputs.v100.value = 0;
+  inputs.dose.value   = '';
+  inputs.v70.value    = 0;
+  inputs.v100.value   = 0;
 
   state.weight = 0;
-  state.dose = 0;
-  state.exact = 0;
-  state.rounded = 0;
-  state.bestMix = {a:0,b:0,total:0,unused:0,pct:0};
-  state.lastPreview = null;
+  state.dose   = 0;
+  state.E      = 0;
+  state.best   = null;
 
-  inputs.inline.hidden = true;
-  inputs.suggestionsRow.hidden = true;
-  inputs.delta.hidden = true;
-  inputs.sustCard.hidden = true;
+  inputs.inline.hidden        = true;
+  inputs.suggestionsRow.hidden= true;
+  inputs.delta.hidden         = true;
+  inputs.wasteWrap.hidden     = true;
 
-  // Calculator modal fresh
+  // modal fresh
   modal.mWeight.value = '';
-  modal.mDose.value = '';
+  modal.mDose.value   = '';
   modal.maxVialText.textContent = `Max vial option: ${state.cap}`;
   refreshModal();
 }
 inputs.resetBtn.addEventListener('click', resetForm);
 
 /* =========================
-   Calculator (modal)
+   Calculator (manual open)
 ========================= */
 inputs.openCalc.addEventListener('click', () => {
   refreshModal();
@@ -506,33 +493,32 @@ modal.backdrop.addEventListener('click',(e)=>{ if(e.target===modal.backdrop) mod
 function refreshModal(){
   const w = Number(modal.mWeight.value||0);
   const d = Number(modal.mDose.value||0);
-  const valid = (w>0 && d>0);
-  const exact = valid ? computeExact(w,d) : 0;
-  const rounded = roundedRequired(exact);
+  const ok = (w>0 && d>0);
+  const E = ok ? exactDose(w,d) : 0;
 
-  modal.mCalcLine.textContent = valid
-    ? `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(exact)} mg (rounded up to ${fmt0(rounded)} mg for vialing)`
+  modal.mCalcLine.textContent = ok
+    ? `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(E)} mg`
     : 'Set weight and dose to view options.';
-  modal.mExact.textContent = fmt2(exact);
+  modal.mExact.textContent = fmt2(E);
 
   modal.results.innerHTML = '';
-  if(valid){
-    const options = enumerateOptions(exact, state.cap).slice(0,3);
+  if(ok){
+    const options = enumerateValidPlans(E, state.cap).slice(0,3);
     options.forEach((o,idx)=>{
       const tr = document.createElement('tr');
       if(idx===0) tr.style.background='#faf7f8';
       tr.innerHTML = `
-        <td style="border:1px solid var(--border);padding:8px 10px">Option ${idx+1}${idx===0?' (Least unused)':''}</td>
+        <td style="border:1px solid var(--border);padding:8px 10px">Option ${idx+1}${idx===0?' (Least waste)':''}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.a}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.b}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt0(o.total)}</td>
-        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt0(o.unused)}</td>
-        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${(o.pct).toFixed(2)}%</td>
+        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt2(o.waste)}</td>
+        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.wastePct.toFixed(2)}%</td>
       `;
       modal.results.appendChild(tr);
     });
   }
-  modal.apply.disabled = true; // stays disabled (advisory mode)
+  modal.apply.disabled = true;
 }
 
 /* =========================
@@ -541,48 +527,48 @@ function refreshModal(){
 ['input','change'].forEach(evt=>{
   inputs.weight.addEventListener(evt, refreshMain);
   inputs.dose.addEventListener(evt, refreshMain);
-  inputs.v70.addEventListener(evt, ()=> refreshDeltaStrip());
-  inputs.v100.addEventListener(evt, ()=> refreshDeltaStrip());
+  inputs.v70.addEventListener(evt, refreshDelta);
+  inputs.v100.addEventListener(evt, refreshDelta);
 });
 
 function refreshMain(){
   const w = Number(inputs.weight.value||0);
   const d = Number(inputs.dose.value||0);
-  const valid = (w>0 && d>0);
+  const ok = (w>0 && d>0);
 
   state.weight = w;
-  state.dose = d;
-  state.exact = computeExact(w,d);
-  state.rounded = roundedRequired(state.exact);
+  state.dose   = d;
+  state.E      = ok ? exactDose(w,d) : 0;
 
-  inputs.inline.hidden = !valid;
+  inputs.inline.hidden = !ok;
 
-  if(valid){
-    inputs.calcLine.textContent = `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(state.exact)} mg (rounded to ${fmt0(state.rounded)} mg for vialing).`;
-    inputs.exactDose.textContent = fmt2(state.exact);
+  if(ok){
+    inputs.calcLine.textContent = `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(state.E)} mg`;
+    inputs.exactDose.textContent = fmt2(state.E);
 
     // suggestions
-    const options = enumerateOptions(state.exact, state.cap);
-    const best = options[0] || {a:0,b:0,total:0,unused:0,pct:0};
-    state.bestMix = best;
-    const singles = bestSingles(state.exact, state.cap);
+    const options = enumerateValidPlans(state.E, state.cap);
+    state.best = options[0] || null;
 
-    // Pill copy — concise; baseline comparator hint
-    const base = baselineSingleStrength(state.exact, state.cap);
-    const avoidedMixed = Math.max(0, base.unused - best.unused);
-    const pctMixed = base.unused>0 ? Math.round((avoidedMixed/base.unused)*100) : 0;
-    inputs.sugMixed.textContent = `Mixed best — avoids ${fmt0(avoidedMixed)} mg vs single-strength ${pctMixed>0?`(▲${pctMixed}%)`:''}`;
+    const singles = singlesThatMeet(state.E, state.cap);
+    const best70  = { a: singles.n70,  b: 0, total: singles.n70*70,  waste: (singles.n70*70  - state.E) };
+    const best100 = { a: 0,            b: singles.n100, total: singles.n100*100, waste: (singles.n100*100 - state.E) };
 
-    const s70 = {a:singles.n70,b:0,total:singles.n70*70,unused:singles.n70*70 - state.exact};
-    const s100 = {a:0,b:singles.n100,total:singles.n100*100,unused:singles.n100*100 - state.exact};
+    // Mixed best pill
+    if(state.best){
+      const wPct = state.best.waste / state.best.total * 100;
+      inputs.sugMixed.textContent = `Mixed best — Waste ${fmt2(state.best.waste)} mg (${wPct.toFixed(2)}%)`;
+    }else{
+      inputs.sugMixed.textContent = `Mixed best — No valid mix under cap`;
+    }
 
-    const av70 = Math.max(0, base.unused - s70.unused);
-    const av100 = Math.max(0, base.unused - s100.unused);
-    const p70 = base.unused>0 ? Math.round((av70/base.unused)*100) : 0;
-    const p100 = base.unused>0 ? Math.round((av100/base.unused)*100) : 0;
+    // 70-only pill
+    const w70pct = best70.total>0 ? (best70.waste/best70.total*100) : 0;
+    inputs.sug70.textContent = `70-only — Waste ${fmt2(best70.waste)} mg (${w70pct.toFixed(2)}%)`;
 
-    inputs.sug70.textContent = `70-only — ${av70>0?`avoids ${fmt0(av70)} mg (▲${p70}%)`: 'baseline comparator'}`;
-    inputs.sug100.textContent = `100-only — ${av100>0?`avoids ${fmt0(av100)} mg (▲${p100}%)`: 'baseline comparator'}`;
+    // 100-only pill
+    const w100pct = best100.total>0 ? (best100.waste/best100.total*100) : 0;
+    inputs.sug100.textContent = `100-only — Waste ${fmt2(best100.waste)} mg (${w100pct.toFixed(2)}%)`;
 
     inputs.suggestionsRow.hidden = false;
   }else{
@@ -591,132 +577,105 @@ function refreshMain(){
     inputs.suggestionsRow.hidden = true;
   }
 
-  refreshDeltaStrip();
+  refreshDelta();
 }
 
 /* Suggestion popup openers */
 inputs.sugMixed.addEventListener('click', ()=>{
-  const best = state.bestMix || {a:0,b:0};
-  openSuggestionPopup('mixed', best.a, best.b);
+  if(!state.best){ openSuggestionPopup(0,0,'Mixed best (none)', true); return; }
+  openSuggestionPopup(state.best.a, state.best.b, 'Mixed best');
 });
 inputs.sug70.addEventListener('click', ()=>{
-  const singles = bestSingles(state.exact, state.cap);
-  openSuggestionPopup('70only', singles.n70, 0);
+  const s = singlesThatMeet(state.E, state.cap);
+  openSuggestionPopup(s.n70, 0, '70-only');
 });
 inputs.sug100.addEventListener('click', ()=>{
-  const singles = bestSingles(state.exact, state.cap);
-  openSuggestionPopup('100only', 0, singles.n100);
+  const s = singlesThatMeet(state.E, state.cap);
+  openSuggestionPopup(0, s.n100, '100-only');
 });
 
 /* =========================
-   Suggestion Popup content
+   Suggestion Popup content (waste-only)
 ========================= */
-function openSuggestionPopup(kind, a, b){
-  // snapshot of "current selection"
-  const curA = Number(inputs.v70.value||0);
-  const curB = Number(inputs.v100.value||0);
-  const curT = curA*70 + curB*100;
-  const curU = Math.max(0, curT - state.exact);
+function openSuggestionPopup(a, b, label, none=false){
+  const E = state.E;
+  const T = a*70 + b*100;
 
-  const suggestT = a*70 + b*100;
-  const suggestU = Math.max(0, suggestT - state.exact);
+  choice.doseLine.textContent  = `Dose: ${fmt2(state.dose)} mg/kg · Weight: ${fmt2(state.weight)} kg`;
+  choice.exactLine.textContent = `Exact required: ${fmt2(E)} mg`;
 
-  // 1) You selected
-  choice.youSelected.textContent = (curA+curB)>0
-    ? `${curA}×70 + ${curB}×100 = ${fmt0(curT)} mg (Unused: ${fmt0(curU)} mg)`
-    : 'None yet';
-
-  // 2) Dose regimen
-  choice.doseLine.textContent = `Dose: ${fmt2(state.dose)} mg/kg · Weight: ${fmt2(state.weight)} kg`;
-  choice.exactLine.textContent = `Exact required: ${fmt2(state.exact)} mg (rounded context: ${fmt0(state.rounded)} mg)`;
-
-  // 3) Our suggestion
-  const title = kind==='mixed' ? 'Our suggestion — Mixed best'
-              : kind==='70only' ? 'Our suggestion — 70-only'
-              : 'Our suggestion — 100-only';
-  choice.suggestTitle.textContent = title;
-  choice.suggestSplit.textContent = `${a}×70 + ${b}×100 = ${fmt0(suggestT)} mg`;
-  choice.suggestUnused.textContent = `Unused: ${fmt0(suggestU)} mg`;
-
-  // 4) Sustainability impact
-  const base = baselineSingleStrength(state.exact, state.cap);
-  const impCur = improvementVsCurrent(curU, suggestU); // vs current selection
-  const avoidedVsBase = Math.max(0, base.unused - suggestU);
-  const pctVsBase = base.unused>0 ? Math.round((avoidedVsBase/base.unused)*100) : 0;
-
-  choice.impactVsCurrent.textContent =
-    (curA+curB)>0
-      ? `Improvement vs your current selection: ${impCur.msg}`
-      : `Once you enter vials, we’ll compare improvement vs your selection.`;
-  choice.impactVsBaseline.textContent =
-    `Context vs single-strength baseline: avoided ${fmt0(avoidedVsBase)} mg ${pctVsBase>0?`(▲${pctVsBase}%)`:''}`;
-
-  // 5) Why choose this
-  let why = '';
-  if(kind==='mixed'){
-    why = 'Minimises unused drug among viable combinations (tie-breakers: fewer total vials, then lower total mg).';
-  }else if(kind==='70only'){
-    why = 'Single-strength simplicity; aligns with inventory standardisation and prep familiarity.';
-  }else{
-    why = 'Single-strength simplicity; may reduce total vials to prepare depending on dose.';
+  if(none){
+    choice.suggestSplit.textContent  = `${label}`;
+    choice.suggestWaste.textContent  = `No valid combination under current search cap`;
+    choice.suggestStatus.textContent = `Increase 70 mg and/or 100 mg vials to meet or exceed ${fmt2(E)} mg.`;
+    choice.backdrop.style.display='flex';
+    return;
   }
-  choice.whyLine.textContent = why;
 
-  // store preview so the main card can reference "improvement vs current selection"
-  state.lastPreview = {kind, a, b, total:suggestT, unused:suggestU};
+  choice.suggestSplit.textContent = `${label}: ${a}×70 + ${b}×100 = ${fmt0(T)} mg`;
 
-  // open
+  if (T + EPS < E){
+    const underBy = E - T;
+    choice.suggestWaste.textContent  = `Under by: ${fmt2(underBy)} mg`;
+    choice.suggestStatus.textContent = `Status: UNDER TARGET — increase vials to meet/exceed exact dose.`;
+  } else {
+    const W = T - E;
+    const Wpct = T>0 ? (W/T*100) : 0;
+    choice.suggestWaste.textContent  = `Waste: ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
+    choice.suggestStatus.textContent = `Status: ${wasteBandLabel(Wpct)}`;
+  }
+
   choice.backdrop.style.display='flex';
 }
 choice.backdrop.addEventListener('click',(e)=>{ if(e.target===choice.backdrop) choice.backdrop.style.display='none'; });
 choice.close.addEventListener('click', ()=> choice.backdrop.style.display='none');
 
 /* =========================
-   Required/Summary + Sust card
+   Summary + Waste meter
 ========================= */
-function refreshDeltaStrip(){
-  const total = Number(inputs.v70.value||0)*70 + Number(inputs.v100.value||0)*100;
-  const exact = state.exact;
-  const required = state.rounded;
-  const engaged = (Number(inputs.v70.value||0) > 0) || (Number(inputs.v100.value||0) > 0);
+function refreshDelta(){
+  const a = Number(inputs.v70.value||0);
+  const b = Number(inputs.v100.value||0);
+  const T = a*70 + b*100;
+  const E = state.E;
 
+  const engaged = (a>0 || b>0);
   inputs.delta.hidden = !engaged;
 
-  inputs.requiredLine.textContent = `Required (rounded): ${fmt0(required)} mg`;
-
   if(!engaged){
-    inputs.sustCard.hidden = true;
+    inputs.deltaUnder.hidden = true;
+    inputs.deltaOk.hidden    = true;
+    inputs.wasteWrap.hidden  = true;
     return;
   }
 
-  if(total < required){
+  if (T + EPS < E){
+    const underBy = E - T;
     inputs.deltaUnder.hidden = false;
-    inputs.deltaOk.hidden = true;
-    inputs.deltaUnder.textContent = `⬇ Under by: ${fmt0(required - total)} mg`;
-    inputs.sustCard.hidden = true;
-  }else{
-    const unused = Math.max(0, total - exact);
+    inputs.deltaOk.hidden    = true;
+    inputs.deltaUnder.textContent = `⬇ Under by: ${fmt2(underBy)} mg`;
+    inputs.wasteWrap.hidden  = true; // hide bar when under
+  } else {
+    const W = T - E;
+    const Wpct = T>0 ? (W/T*100) : 0;
+
     inputs.deltaUnder.hidden = true;
-    inputs.deltaOk.hidden = false;
-    inputs.deltaOk.textContent = `Total ordered: ${fmt0(total)} mg · Unused: ${fmt0(unused)} mg`;
+    inputs.deltaOk.hidden    = false;
+    inputs.deltaOk.textContent = `Total ordered: ${fmt0(T)} mg · Waste: ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
 
-    // Sustainability card — improvement vs current selection (i.e., vs last previewed suggestion)
-    if(state.lastPreview){
-      const curU = unused;
-      const planU = state.lastPreview.unused;
-      const imp = improvementVsCurrent(curU, planU);
+    // Waste meter
+    inputs.wasteWrap.hidden = false;
+    // Fill equals W% (cap at 100)
+    const fill = Math.max(0, Math.min(100, Wpct));
+    inputs.wasteFill.style.width = `${fill.toFixed(1)}%`;
 
-      inputs.sustCard.hidden = false;
-      inputs.sustLinePrimary.textContent =
-        `If you switch to ${state.lastPreview.kind==='mixed'?'mixed best': state.lastPreview.kind==='70only'?'70-only':'100-only'}: ${imp.msg}`;
-      inputs.sustLineHint.textContent =
-        `Previewed plan: ${state.lastPreview.a}×70 + ${state.lastPreview.b}×100 = ${fmt0(state.lastPreview.total)} mg (Unused: ${fmt0(planU)} mg)`;
-    }else{
-      // No preview yet — prompt to use suggestions
-      inputs.sustCard.hidden = false;
-      inputs.sustLinePrimary.textContent = `Open a suggestion above to see improvement vs your current selection.`;
-      inputs.sustLineHint.textContent = `Tip: Mixed best often avoids more unused vs a single-strength order.`;
-    }
+    // Colour by band
+    let color = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#1f7a39';
+    if (Wpct > 50)      color = getComputedStyle(document.documentElement).getPropertyValue('--red').trim()   || '#b00020';
+    else if (Wpct > 25) color = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#b55b00';
+    inputs.wasteFill.style.background = color;
+
+    inputs.wasteText.textContent = `Waste band: ${wasteBandLabel(Wpct)} — ${Wpct.toFixed(2)}%`;
   }
 }
 
@@ -724,9 +683,7 @@ function refreshDeltaStrip(){
    Start-up
 ========================= */
 document.addEventListener('DOMContentLoaded', ()=>{
-  resetForm();
-  // Calculator opens on load by request
-  modal.backdrop.style.display='flex';
+  resetForm(); // calculator does NOT auto-open
 });
 </script>
 </body>

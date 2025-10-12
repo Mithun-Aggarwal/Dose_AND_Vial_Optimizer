@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>HCP Infusion Planner — Waste-only (Exact Dose)</title>
+<title>HCP Infusion Planner — Waste-only (Exact Dose) + Composition Pills + Exact Marker Bar</title>
 <style>
   :root{
     --brand:#8F0E1A;
@@ -16,7 +16,10 @@
     --green:#1f7a39;     /* Low waste (≤25%) */
     --amber:#b55b00;     /* Moderate (25–50%) */
     --red:#b00020;       /* High (>50%) */
-    --under:#222222;     /* Under target indicator colour */
+    --under:#222222;     /* Under target / neutral fill */
+    --green-bg:#e8f5ec;
+    --amber-bg:#fff3e0;
+    --red-bg:#ffebee;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
@@ -47,26 +50,34 @@
   .inline-summary{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .center{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+
+  /* Pills */
   .pill{display:inline-block;background:#fff;border:1px solid var(--brand);color:var(--brand);font-weight:700;border-radius:999px;padding:6px 10px;cursor:pointer}
   .pill:focus{outline:3px solid rgba(143,14,26,.18)}
+  .pill-green{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+  .pill-amber{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
+  .pill-red{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+
   .delta{display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff}
   .k{font-weight:700}
   .actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media (max-width:860px){.actions-grid{grid-template-columns:1fr}}
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
 
-  /* Waste bar + legend */
-  .waste-wrap{margin-top:6px}
-  .waste-label{font-size:.95rem;color:#333;margin-bottom:6px}
-  .bar{height:10px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
-  .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--green);transition:width .2s ease, background-color .2s ease}
+  /* Dose bar with Exact marker */
+  .dosebar-wrap{margin-top:10px}
+  .dosebar-label{font-size:.95rem;color:#333;margin-bottom:6px}
+  .bar{height:12px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
+  .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--under);transition:width .2s ease, background-color .2s ease}
+  .marker{position:absolute;top:-5px;bottom:-5px;width:2px;background:#111;opacity:.9}
+  .marker-label{position:absolute;top:-22px;transform:translateX(-50%);font-size:.8rem;color:#111;font-weight:700;white-space:nowrap}
   .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.85rem;color:#444}
   .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
   .dot-green{background:var(--green)}
   .dot-amber{background:var(--amber)}
   .dot-red{background:var(--red)}
   .dot-under{background:var(--under)}
-  .waste-text{font-size:.95rem;margin-top:6px}
+  .dosebar-text{font-size:.95rem;margin-top:6px}
 
   /* Modal primitives */
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);align-items:center;justify-content:center;padding:20px;z-index:1000}
@@ -170,10 +181,9 @@
 
     <div class="divider"></div>
 
-    <!-- Inline exact calculation (appears when weight+dose valid) -->
+    <!-- Inline exact calculation -->
     <div id="inline" class="inline-summary" hidden>
-      <div id="calcLine" class="muted"></div>
-      <div style="margin-top:2px" class="muted">Plans must meet or exceed the exact required dose.</div>
+      <div id="calcLine" class="muted">Dose calculator — based on TGA approval.</div>
       <div style="margin-top:6px"><span class="k">Exact required dose:</span> <span id="exactDose" class="mono">0.00</span> mg</div>
     </div>
 
@@ -191,7 +201,24 @@
       </div>
     </div>
 
-    <!-- Single-line suggestions -->
+    <!-- Dose bar with Exact-dose marker (now directly below vial inputs) -->
+    <div id="doseBarWrap" class="dosebar-wrap" hidden>
+      <div class="dosebar-label">Dose progress</div>
+      <div class="bar" id="doseBar">
+        <div id="doseBarFill" class="bar-fill"></div>
+        <div id="doseBarMarker" class="marker" style="left:0%"></div>
+        <div id="doseBarMarkerLabel" class="marker-label">Exact dose</div>
+      </div>
+      <div id="doseBarText" class="dosebar-text mono"></div>
+      <div class="legend">
+        <span><span class="dot dot-green"></span>Low waste (≤25%)</span>
+        <span><span class="dot dot-amber"></span>Moderate (25–50%)</span>
+        <span><span class="dot dot-red"></span>High (>50%)</span>
+        <span><span class="dot dot-under"></span>Under target</span>
+      </div>
+    </div>
+
+    <!-- Single-line suggestions with compositions (colour-coded) -->
     <div id="suggestionsRow" class="center" hidden style="margin-top:10px">
       <button id="sugMixed" class="pill" aria-label="Open details for mixed best"></button>
       <button id="sug70"   class="pill" aria-label="Open details for 70-only"></button>
@@ -200,24 +227,10 @@
 
     <div class="divider"></div>
 
-    <!-- Summary + Waste meter -->
+    <!-- Summary (under/waste) -->
     <div id="delta" class="delta" aria-live="polite" hidden>
       <div id="deltaUnder" class="mono" hidden>⬇ Under by: 0.00 mg</div>
       <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0.00 mg (0.00%)</div>
-
-      <!-- Waste meter -->
-      <div id="wasteWrap" class="waste-wrap" hidden>
-        <div class="waste-label">Waste % (current selection)</div>
-        <div class="bar"><div id="wasteFill" class="bar-fill"></div></div>
-        <div id="wasteText" class="waste-text mono"></div>
-        <div class="legend">
-          <span><span class="dot dot-green"></span>Low (≤25%)</span>
-          <span><span class="dot dot-amber"></span>Moderate (25–50%)</span>
-          <span><span class="dot dot-red"></span>High (>50%)</span>
-          <span><span class="dot dot-under"></span>Under target</span>
-        </div>
-      </div>
-
       <div class="muted">Advisory only. Verify with PI / local policy.</div>
     </div>
 
@@ -243,7 +256,7 @@
         <div class="k" style="margin-bottom:6px">Method</div>
         <ul style="margin:0 0 0 18px; padding:0; color:#444">
           <li>Vial strengths: 70 mg and 100 mg.</li>
-          <li>Lists combinations that meet or exceed the exact required dose.</li>
+          <li>Options are computed for the exact required dose.</li>
           <li>Sorted by least <b>waste</b> first; tie-breakers: fewer total vials, then lower total mg.</li>
         </ul>
       </div>
@@ -275,12 +288,11 @@
 
       <div style="margin-top:8px" class="muted">Top 3 least-waste options</div>
       <div style="margin-top:6px;overflow:auto">
-        <table id="results" style="border-collapse:collapse;width:100%;min-width:560px">
+        <table id="results" style="border-collapse:collapse;width:100%;min-width:620px">
           <thead>
             <tr>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:left">Option</th>
-              <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">70 mg</th>
-              <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">100 mg</th>
+              <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Composition</th>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Total (mg)</th>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Waste (mg)</th>
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Waste %</th>
@@ -297,7 +309,7 @@
   </div>
 </div>
 
-<!-- Suggestion Popup (Waste-only, no rounding) -->
+<!-- Suggestion Popup (Waste-only, composition-first) -->
 <div id="choiceBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="modal" style="max-width:720px">
     <div class="modal-bd">
@@ -341,39 +353,39 @@
 </div>
 
 <script>
-/* =========================
-   Utilities & state (waste-only)
-========================= */
+/* =====================================
+   Utilities & state (waste-only, no rounding)
+===================================== */
 const el  = id => document.getElementById(id);
-const fmt2 = n => Number(n).toFixed(2);   // for E, W, under amounts
+const fmt2 = n => Number(n).toFixed(2);   // for E, waste, under
 const fmt0 = n => Math.round(Number(n)).toLocaleString(); // for totals (mg integers)
 const EPS = 1e-9;
 
 function exactDose(weight, dose){ return (weight>0 && dose>0) ? (weight*dose) : 0; }
 
-/* Enumerate only plans that MEET/EXCEED exact dose; sort by least waste, then fewer vials, then lower total mg */
+/* Enumerate valid plans (meet/exceed E), least waste first */
 function enumerateValidPlans(E, cap=10){
   const out=[];
   for(let a=0;a<=cap;a++){
     for(let b=0;b<=cap;b++){
       const T = a*70 + b*100;
       if(T<=0) continue;
-      if(T + EPS < E) continue; // must meet/exceed exact required
+      if(T + EPS < E) continue;
       const W = T - E;
       const Wpct = T>0 ? (W/T*100) : 0;
       out.push({a,b,total:T,waste:W,wastePct:Wpct});
     }
   }
   out.sort((x,y)=>{
-    if (Math.abs(x.waste - y.waste) > 1e-9) return x.waste - y.waste;               // least waste
+    if (Math.abs(x.waste - y.waste) > 1e-9) return x.waste - y.waste;
     const vx = (x.a + x.b), vy = (y.a + y.b);
-    if (vx !== vy) return vx - vy;                                                   // fewer vials
-    return x.total - y.total;                                                        // lower total mg
+    if (vx !== vy) return vx - vy;
+    return x.total - y.total;
   });
   return out;
 }
 
-/* Singles that meet/exceed E */
+/* Singles (ceil to meet/exceed) */
 function singlesThatMeet(E, cap=10){
   const n70  = Math.min(Math.ceil(E/70), cap);
   const n100 = Math.min(Math.ceil(E/100), cap);
@@ -385,6 +397,22 @@ function wasteBandLabel(pct){
   if (pct <= 25) return 'Low waste';
   if (pct <= 50) return 'Moderate waste';
   return 'High waste';
+}
+
+/* Composition string */
+function compText(a,b){
+  const parts=[];
+  if (a>0) parts.push(`70×${a}`);
+  if (b>0) parts.push(`100×${b}`);
+  return parts.length? parts.join(' + ') : '—';
+}
+
+/* Pill colour setter */
+function setPillColor(btn, pct){
+  btn.classList.remove('pill-green','pill-amber','pill-red');
+  if (pct <= 25) btn.classList.add('pill-green');
+  else if (pct <= 50) btn.classList.add('pill-amber');
+  else btn.classList.add('pill-red');
 }
 
 /* -------------------------
@@ -400,6 +428,13 @@ const inputs = {
   calcLine:    el('calcLine'),
   exactDose:   el('exactDose'),
 
+  // Dose bar
+  doseBarWrap:  el('doseBarWrap'),
+  doseBarFill:  el('doseBarFill'),
+  doseBarMarker:el('doseBarMarker'),
+  doseBarMarkerLabel: el('doseBarMarkerLabel'),
+  doseBarText:  el('doseBarText'),
+
   suggestionsRow: el('suggestionsRow'),
   sugMixed: el('sugMixed'),
   sug70:   el('sug70'),
@@ -408,10 +443,6 @@ const inputs = {
   delta:     el('delta'),
   deltaUnder:el('deltaUnder'),
   deltaOk:   el('deltaOk'),
-
-  wasteWrap: el('wasteWrap'),
-  wasteFill: el('wasteFill'),
-  wasteText: el('wasteText'),
 
   openCalc: el('openCalc'),
   resetBtn: el('resetBtn')
@@ -445,7 +476,7 @@ const state = {
   dose:   0,
   E:      0,       // exact required dose
   cap:    10,
-  best:   null     // current best mixed plan (least waste)
+  best:   null     // current best mixed plan
 };
 
 /* =========================
@@ -463,9 +494,9 @@ function resetForm(){
   state.best   = null;
 
   inputs.inline.hidden        = true;
+  inputs.doseBarWrap.hidden   = true;
   inputs.suggestionsRow.hidden= true;
   inputs.delta.hidden         = true;
-  inputs.wasteWrap.hidden     = true;
 
   // modal fresh
   modal.mWeight.value = '';
@@ -509,8 +540,7 @@ function refreshModal(){
       if(idx===0) tr.style.background='#faf7f8';
       tr.innerHTML = `
         <td style="border:1px solid var(--border);padding:8px 10px">Option ${idx+1}${idx===0?' (Least waste)':''}</td>
-        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.a}</td>
-        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.b}</td>
+        <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${compText(o.a,o.b)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt0(o.total)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt2(o.waste)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.wastePct.toFixed(2)}%</td>
@@ -527,8 +557,8 @@ function refreshModal(){
 ['input','change'].forEach(evt=>{
   inputs.weight.addEventListener(evt, refreshMain);
   inputs.dose.addEventListener(evt, refreshMain);
-  inputs.v70.addEventListener(evt, refreshDelta);
-  inputs.v100.addEventListener(evt, refreshDelta);
+  inputs.v70.addEventListener(evt, ()=> { updateDoseBar(); refreshDelta(); });
+  inputs.v100.addEventListener(evt, ()=> { updateDoseBar(); refreshDelta(); });
 });
 
 function refreshMain(){
@@ -541,12 +571,13 @@ function refreshMain(){
   state.E      = ok ? exactDose(w,d) : 0;
 
   inputs.inline.hidden = !ok;
+  inputs.doseBarWrap.hidden = !ok;
 
   if(ok){
-    inputs.calcLine.textContent = `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(state.E)} mg`;
+    inputs.calcLine.textContent  = `Dose calculator — based on TGA approval.`;
     inputs.exactDose.textContent = fmt2(state.E);
 
-    // suggestions
+    // suggestions (composition-first)
     const options = enumerateValidPlans(state.E, state.cap);
     state.best = options[0] || null;
 
@@ -556,19 +587,23 @@ function refreshMain(){
 
     // Mixed best pill
     if(state.best){
-      const wPct = state.best.waste / state.best.total * 100;
-      inputs.sugMixed.textContent = `Mixed best — Waste ${fmt2(state.best.waste)} mg (${wPct.toFixed(2)}%)`;
+      const wPct = state.best.total>0 ? (state.best.waste/state.best.total*100) : 0;
+      inputs.sugMixed.textContent = `Mixed best — ${compText(state.best.a,state.best.b)} • Waste ${fmt2(state.best.waste)} mg (${wPct.toFixed(2)}%)`;
+      setPillColor(inputs.sugMixed, wPct);
     }else{
-      inputs.sugMixed.textContent = `Mixed best — No valid mix under cap`;
+      inputs.sugMixed.textContent = `Mixed best — no valid mix under cap`;
+      inputs.sugMixed.classList.remove('pill-green','pill-amber','pill-red');
     }
 
     // 70-only pill
     const w70pct = best70.total>0 ? (best70.waste/best70.total*100) : 0;
-    inputs.sug70.textContent = `70-only — Waste ${fmt2(best70.waste)} mg (${w70pct.toFixed(2)}%)`;
+    inputs.sug70.textContent = `70-only — ${compText(best70.a,best70.b)} • Waste ${fmt2(best70.waste)} mg (${w70pct.toFixed(2)}%)`;
+    setPillColor(inputs.sug70, w70pct);
 
     // 100-only pill
     const w100pct = best100.total>0 ? (best100.waste/best100.total*100) : 0;
-    inputs.sug100.textContent = `100-only — Waste ${fmt2(best100.waste)} mg (${w100pct.toFixed(2)}%)`;
+    inputs.sug100.textContent = `100-only — ${compText(best100.a,best100.b)} • Waste ${fmt2(best100.waste)} mg (${w100pct.toFixed(2)}%)`;
+    setPillColor(inputs.sug100, w100pct);
 
     inputs.suggestionsRow.hidden = false;
   }else{
@@ -577,6 +612,7 @@ function refreshMain(){
     inputs.suggestionsRow.hidden = true;
   }
 
+  updateDoseBar();
   refreshDelta();
 }
 
@@ -595,7 +631,44 @@ inputs.sug100.addEventListener('click', ()=>{
 });
 
 /* =========================
-   Suggestion Popup content (waste-only)
+   Dose bar updater (below vials)
+========================= */
+function updateDoseBar(){
+  const E = state.E;
+  if(!(E>0)){ inputs.doseBarWrap.hidden = true; return; }
+
+  const a = Number(inputs.v70.value||0);
+  const b = Number(inputs.v100.value||0);
+  const T = a*70 + b*100;
+
+  // Dynamic scale so E and T fit with headroom
+  let scaleMax = Math.max(E, T, 1) * 1.2;
+  const fillPct   = Math.min(100, Math.max(0, (T/scaleMax)*100));
+  const markerPct = Math.min(100, Math.max(0, (E/scaleMax)*100));
+
+  inputs.doseBarFill.style.width = `${fillPct.toFixed(1)}%`;
+  inputs.doseBarMarker.style.left = `${markerPct.toFixed(1)}%`;
+  inputs.doseBarMarkerLabel.style.left = `${markerPct.toFixed(1)}%`;
+
+  // Color & text
+  if (T + EPS < E){
+    inputs.doseBarFill.style.background = getComputedStyle(document.documentElement).getPropertyValue('--under').trim() || '#222';
+    inputs.doseBarText.textContent = `Under by ${fmt2(E - T)} mg`;
+  } else {
+    const W = T - E;
+    const Wpct = T>0 ? (W/T*100) : 0;
+    let color = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#1f7a39';
+    if (Wpct > 50)      color = getComputedStyle(document.documentElement).getPropertyValue('--red').trim()   || '#b00020';
+    else if (Wpct > 25) color = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#b55b00';
+    inputs.doseBarFill.style.background = color;
+    inputs.doseBarText.textContent = `Total ${fmt0(T)} mg • Waste ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
+  }
+
+  inputs.doseBarWrap.hidden = false;
+}
+
+/* =========================
+   Suggestion Popup (composition-first)
 ========================= */
 function openSuggestionPopup(a, b, label, none=false){
   const E = state.E;
@@ -607,17 +680,17 @@ function openSuggestionPopup(a, b, label, none=false){
   if(none){
     choice.suggestSplit.textContent  = `${label}`;
     choice.suggestWaste.textContent  = `No valid combination under current search cap`;
-    choice.suggestStatus.textContent = `Increase 70 mg and/or 100 mg vials to meet or exceed ${fmt2(E)} mg.`;
+    choice.suggestStatus.textContent = `Status: UNDER TARGET`;
     choice.backdrop.style.display='flex';
     return;
   }
 
-  choice.suggestSplit.textContent = `${label}: ${a}×70 + ${b}×100 = ${fmt0(T)} mg`;
+  choice.suggestSplit.textContent = `${label}: ${compText(a,b)} = ${fmt0(T)} mg`;
 
   if (T + EPS < E){
     const underBy = E - T;
     choice.suggestWaste.textContent  = `Under by: ${fmt2(underBy)} mg`;
-    choice.suggestStatus.textContent = `Status: UNDER TARGET — increase vials to meet/exceed exact dose.`;
+    choice.suggestStatus.textContent = `Status: UNDER TARGET`;
   } else {
     const W = T - E;
     const Wpct = T>0 ? (W/T*100) : 0;
@@ -631,7 +704,7 @@ choice.backdrop.addEventListener('click',(e)=>{ if(e.target===choice.backdrop) c
 choice.close.addEventListener('click', ()=> choice.backdrop.style.display='none');
 
 /* =========================
-   Summary + Waste meter
+   Summary (text-only; bar lives above)
 ========================= */
 function refreshDelta(){
   const a = Number(inputs.v70.value||0);
@@ -645,7 +718,6 @@ function refreshDelta(){
   if(!engaged){
     inputs.deltaUnder.hidden = true;
     inputs.deltaOk.hidden    = true;
-    inputs.wasteWrap.hidden  = true;
     return;
   }
 
@@ -654,7 +726,6 @@ function refreshDelta(){
     inputs.deltaUnder.hidden = false;
     inputs.deltaOk.hidden    = true;
     inputs.deltaUnder.textContent = `⬇ Under by: ${fmt2(underBy)} mg`;
-    inputs.wasteWrap.hidden  = true; // hide bar when under
   } else {
     const W = T - E;
     const Wpct = T>0 ? (W/T*100) : 0;
@@ -662,20 +733,6 @@ function refreshDelta(){
     inputs.deltaUnder.hidden = true;
     inputs.deltaOk.hidden    = false;
     inputs.deltaOk.textContent = `Total ordered: ${fmt0(T)} mg · Waste: ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
-
-    // Waste meter
-    inputs.wasteWrap.hidden = false;
-    // Fill equals W% (cap at 100)
-    const fill = Math.max(0, Math.min(100, Wpct));
-    inputs.wasteFill.style.width = `${fill.toFixed(1)}%`;
-
-    // Colour by band
-    let color = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#1f7a39';
-    if (Wpct > 50)      color = getComputedStyle(document.documentElement).getPropertyValue('--red').trim()   || '#b00020';
-    else if (Wpct > 25) color = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#b55b00';
-    inputs.wasteFill.style.background = color;
-
-    inputs.wasteText.textContent = `Waste band: ${wasteBandLabel(Wpct)} — ${Wpct.toFixed(2)}%`;
   }
 }
 
@@ -683,7 +740,7 @@ function refreshDelta(){
    Start-up
 ========================= */
 document.addEventListener('DOMContentLoaded', ()=>{
-  resetForm(); // calculator does NOT auto-open
+  resetForm();
 });
 </script>
 </body>

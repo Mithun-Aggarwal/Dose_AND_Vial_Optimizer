@@ -1,597 +1,586 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HCP Infusion Planner — Premium Mock with Optimizer</title>
-  <style>
-    :root{
-      --brand:#8F0E1A;          /* deep red from screenshot */
-      --brand-ink:#6f0c15;
-      --text:#2a2a2a;
-      --muted:#6f6f6f;
-      --bg:#fafafa;
-      --card:#ffffff;
-      --field:#f2f2f2;          /* light grey input */
-      --border:#e6e6e6;
-      --shadow:0 8px 24px rgba(0,0,0,.08);
-      --radius:12px;
-      --accent:#f26b1a;         /* subtle action color */
-      --ok:#1a7f37;
-      --warn:#b3261e;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;color:var(--text);background:var(--bg);line-height:1.45}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HCP Infusion Planner — Advisory Mode</title>
+<style>
+  :root{
+    --brand:#8F0E1A;
+    --brand-ink:#6f0c15;
+    --text:#222;
+    --muted:#6f6f6f;
+    --bg:#fafafa;
+    --card:#ffffff;
+    --field:#f2f2f2;
+    --border:#e6e6e6;
+    --ok:#1f7a39;
+    --warn:#b55b00;
+    --under:#8a1a00;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji"}
+  .wrap{max-width:1100px;margin:40px auto;padding:0 20px}
+  .title{font-size:1.6rem;font-weight:800;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 20px;position:relative}
+  .subtle{color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px}
+  @media (max-width:860px){.grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:8px}
+  .label{font-weight:700}
+  .ro{opacity:.85}
+  .input-wrap{position:relative}
+  .unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#555;font-weight:700;background:transparent;padding-left:6px}
+  input[type="date"], input[type="number"], select{width:100%;background:var(--field);border:1px solid var(--border);border-radius:12px;padding:14px 12px;font-size:1rem;outline:none}
+  input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(143,14,26,.12)}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer}
+  .btn.brand{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn.secondary{background:#fff;border-color:var(--brand);color:var(--brand);font-weight:700}
+  .btn.ghost{background:#fff;border-color:var(--border);color:#444}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer;padding:0 12px;gap:10px}
+  .divider{height:1px;background:var(--border);margin:18px 0}
+  .inline-summary{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+  .muted{color:var(--muted)}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
+  .badge{display:inline-block;border:1px dashed var(--brand);color:var(--brand);padding:2px 8px;border-radius:999px;font-size:.8rem;font-weight:700}
+  .pill{display:inline-block;background:#fff;border:1px solid var(--brand);color:var(--brand);font-weight:700;border-radius:999px;padding:6px 10px;margin-right:8px;cursor:pointer}
+  .pill:focus{outline:3px solid rgba(143,14,26,.18)}
+  .delta{display:flex;flex-direction:column;gap:6px;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff}
+  .bar{height:8px;background:linear-gradient(90deg, var(--brand) 0%, var(--brand) var(--p) , #eee var(--p) , #eee 100%);border-radius:999px}
+  .k{font-weight:700}
+  .footer-note{font-size:.9rem;color:var(--muted)}
 
-    .wrap{max-width:980px;margin:48px auto;padding:0 20px}
+  /* Actions grid (50/50) */
+  .actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:860px){.actions-grid{grid-template-columns:1fr}}
+  .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+  .cardlet .icon{margin-top:2px}
+  .cardlet h4{margin:0 0 6px;font-size:1rem}
 
-    .title{font-weight:800;color:var(--brand);font-size:1.35rem;margin-bottom:10px}
-    .subtle{color:var(--muted);margin:6px 0 16px}
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.28);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal{max-width:860px;width:100%;background:#fff;border-radius:18px;border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,.18);overflow:hidden}
+  .modal-hd{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-sub{font-size:.9rem;color:#5d5d5d}
+  .modal-bd{padding:16px 18px}
+  .modal-ft{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;align-items:center}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 8px;border-bottom:1px solid var(--border)}
+  th{text-align:right;color:#444;font-weight:800}
+  th:first-child, td:first-child{text-align:left}
+  td.num{text-align:right}
+  .best{background:rgba(31,122,57,.06)}
+  .best .waste, .best .wastepct{font-weight:900}
+  .check{display:inline-block;margin-left:8px;border:1px solid var(--ok);color:var(--ok);padding:2px 6px;border-radius:6px;font-size:.75rem}
+  .caption{font-size:.9rem;color:#555;margin:8px 0 4px}
 
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin:18px 0}
-
-    .divider{height:1px;background:var(--border);margin:22px 0}
-
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 32px;align-items:start}
-    @media (max-width:820px){.grid{grid-template-columns:1fr}}
-
-    .field{display:flex;flex-direction:column;gap:8px}
-    .label{font-weight:700}
-    .input,select{width:100%;background:var(--field);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;font-size:1rem;outline:none}
-    .input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(143,14,26,.12)}
-    .input[readonly],.input:disabled{background:#f8f8f8;color:var(--muted);cursor:not-allowed}
-    .input[readonly]::placeholder{color:var(--muted)}
-
-    .hint{font-size:.9rem;color:var(--muted)}
-    .hint .pill{display:inline-flex;align-items:center;margin:4px 6px 0 0;padding:4px 10px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);font-weight:700;font-size:.8rem;background:#fff;cursor:pointer;transition:background .2s ease, color .2s ease}
-    .hint .pill:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-    .hint .pill:hover{background:rgba(143,14,26,.08)}
-    .hint .pill.advisory{border-style:dashed;color:var(--muted);background:rgba(143,14,26,.05);cursor:default}
-    .hint .pill.advisory:hover{background:rgba(143,14,26,.05)}
-
-    .inline-summary{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:none;font-size:.95rem}
-    .inline-summary strong{color:var(--brand)}
-    .inline-summary .calc{display:block;margin-bottom:6px;color:var(--muted);font-size:.9rem}
-
-    .actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px}
-    .actions .icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--brand)}
-    .actions .icon-btn:disabled{opacity:.45;cursor:default}
-    .actions .guideline-btn{flex:1;min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--brand);border:1px dashed var(--brand);padding:0 14px;font-weight:700;border-radius:12px;height:44px;text-decoration:none}
-    .actions .guideline-btn:hover{background:rgba(143,14,26,.08)}
-
-    .btn{background:var(--brand);border:none;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer}
-    .btn.secondary{background:#fff;color:var(--brand);border:1px solid var(--brand)}
-    .btn.ghost{background:#fff;border:1px solid var(--border);color:var(--text)}
-    .btn:disabled{opacity:.55;cursor:default}
-
-    /* Delta strip */
-    .delta{grid-column:1 / -1; display:none; border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:#fff}
-    .delta .headline{display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:6px}
-    .delta .required{font-size:.9rem;color:var(--muted);display:block;margin-bottom:6px}
-    .delta.ok{border-color:#d6ead9}
-    .delta.ok .headline{color:var(--ok)}
-    .delta.under{border-color:#f2d7d7}
-    .delta.under .headline{color:var(--warn)}
-    .bar{height:8px; background:#eee; border-radius:999px; overflow:hidden; margin-top:8px}
-    .bar > span{display:block; height:100%; background:linear-gradient(90deg, rgba(26,127,55,.9), rgba(26,127,55,.6)); width:0}
-    .bar.under > span{background:linear-gradient(90deg, rgba(179,38,30,.9), rgba(179,38,30,.6))}
-    .delta .note{display:block; margin-top:6px; font-size:.85rem; color:var(--muted)}
-
-    /* Modal */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;z-index:1000}
-    .modal.active{display:flex}
-    .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
-    .sheet{position:relative;background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.25);max-width:960px;width:100%;max-height:88vh;overflow:auto}
-    .sheet .head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
-    .sheet .title{margin:0;color:var(--brand);font-size:1.2rem}
-    .x{background:none;border:none;font-size:1.6rem;color:var(--brand-ink);cursor:pointer}
-    .sheet .body{padding:18px}
-    .sheet .foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:10px;justify-content:flex-end;align-items:flex-end;flex-wrap:wrap}
-    .apply-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-    .apply-wrap small{font-size:.8rem;color:var(--muted)}
-
-    table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden}
-    th,td{padding:10px 12px;border-bottom:1px solid var(--border)}
-    th{background:#f7f7f7;text-align:left;color:#555}
-    td{text-align:right}
-    th:first-child,td:first-child{text-align:left}
-
-    .max-pill{display:inline-flex;align-items:center;gap:6px;background:#f7f7f7;border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-weight:600;color:var(--muted);margin-top:6px}
-    .max-pill strong{color:var(--text)}
-
-    .option-best{position:relative}
-    .option-best::before{content:"✓";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(26,127,55,.1);color:var(--ok);margin-right:6px;font-size:.75rem;font-weight:700}
-    .option-best .badge{margin-left:6px}
-
-    .badge{display:inline-block;margin-left:8px;padding:2px 6px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);font-weight:700;font-size:.75rem}
-
-    .summary-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
-
-  </style>
+  /* Reset button placement */
+  .reset-wrap{position:absolute;top:18px;right:18px}
+</style>
 </head>
 <body>
   <main class="wrap">
     <div class="title">Please answer the following question:</div>
     <div class="card">
-      <div style="display:flex;gap:28px;flex-wrap:wrap">
-        <div>
-          <div style="font-weight:700;margin-bottom:8px">Is the patient continuing on treatment?</div>
-          <label style="display:inline-flex;align-items:center;gap:8px;margin-right:16px"><input type="radio" name="cont" checked> Yes</label>
-          <label style="display:inline-flex;align-items:center;gap:8px"><input type="radio" name="cont"> No</label>
-        </div>
-        <div>
-          <div style="font-weight:700;margin-bottom:8px">Has the patient’s treatment been delayed?</div>
-          <label style="display:inline-flex;align-items:center;gap:8px;margin-right:16px"><input type="radio" name="delay"> Yes</label>
-          <label style="display:inline-flex;align-items:center;gap:8px"><input type="radio" name="delay" checked> No</label>
-        </div>
+      <div class="reset-wrap">
+        <button id="resetBtn" class="btn ghost" aria-label="Reset form">Reset</button>
       </div>
-      <div class="divider"></div>
-
-      <!-- Infusion details grid -->
       <div class="grid">
+        <!-- Dates (locked) -->
         <div class="field">
-          <label class="label" for="prev">What date did the previous infusion happen?*</label>
-          <!-- Unchangeable dates per advisory requirements -->
-          <input class="input" id="prev" type="text" value="15 Nov 2025" readonly aria-readonly="true" />
+          <div class="label">What date did the previous infusion happen? <span class="subtle">*</span></div>
+          <input id="prevDate" type="date" class="ro" value="2025-11-15" disabled aria-disabled="true" />
+          <div class="subtle">Locked by protocol.</div>
         </div>
         <div class="field">
-          <label class="label" for="next">What date is the next infusion?*</label>
-          <input class="input" id="next" type="text" value="1 Aug 2026" readonly aria-readonly="true" />
+          <div class="label">What date is the next infusion? <span class="subtle">*</span></div>
+          <input id="nextDate" type="date" class="ro" value="2026-08-01" disabled aria-disabled="true" />
+          <div class="subtle">Locked by protocol.</div>
         </div>
 
+        <!-- Weight -->
         <div class="field">
-          <label class="label" for="weight">Confirm patient’s weight*</label>
-          <input class="input" id="weight" type="number" min="0" step="0.1" value="0" placeholder="e.g., 86" />
-          <div id="inlineSummary" class="inline-summary" aria-live="polite"></div>
+          <div class="label">Confirm patient’s weight (kg) <span class="subtle">*</span></div>
+          <div class="input-wrap">
+            <input id="weight" type="number" min="0" step="0.1" value="" placeholder="e.g., 91.3" aria-label="Patient weight in kilograms" />
+            <span class="unit">kg</span>
+          </div>
+          <div class="subtle">Enter weight in kilograms (kg).</div>
         </div>
+
+        <!-- Dose regimen -->
         <div class="field">
-          <label class="label" for="dose">Confirm patient’s treatment dose*</label>
-          <select id="dose" class="input">
-            <option value="" selected disabled>-- Select dose regimen --</option>
+          <div class="label">Confirm patient’s treatment dose <span class="subtle">*</span></div>
+          <select id="dose" aria-label="Dose regimen in mg per kg">
+            <option value="" selected>-- Select dose regimen --</option>
             <option value="2.5">2.5 mg/kg (Start)</option>
             <option value="1.9">1.9 mg/kg (Reduced)</option>
           </select>
-          <div class="actions">
-            <button class="icon-btn" id="openOptimizer" type="button" disabled aria-label="Open dose & vial optimizer">
-              <span aria-hidden="true">🧮</span>
-            </button>
-            <!-- // TODO: replace with TGA PI URL -->
-            <a class="guideline-btn" id="guidelineLink" href="#" target="_blank" rel="noreferrer">
-              View official guideline (TGA)
-            </a>
-            <span class="hint" style="flex-basis:100%">Two vial strengths are available: 70 mg &amp; 100 mg.</span>
-          </div>
+          <div class="footer-note">Guidance only. HCP must verify against PI / local policy.</div>
         </div>
-
-        <div class="field">
-          <label class="label" for="vials70">Confirm number of 70 mg vials</label>
-          <input id="vials70" class="input" type="number" min="0" step="1" placeholder="0" />
-          <div id="hint70" class="hint"></div>
-        </div>
-        <div class="field">
-          <label class="label" for="vials100">Confirm number of 100 mg vials</label>
-          <input id="vials100" class="input" type="number" min="0" step="1" placeholder="0" />
-          <div id="hint100" class="hint"></div>
-        </div>
-
-        <!-- Advisory delta strip spanning both columns -->
-        <div class="delta" id="doseDelta" aria-live="polite">
-          <!-- filled dynamically -->
-        </div>
-
-        <div class="field">
-          <label class="label" for="freq">Confirm infusion frequency*</label>
-          <select id="freq" class="input">
-            <option>3 weeks</option>
-            <option>2 weeks</option>
-            <option>4 weeks</option>
-          </select>
-        </div>
-        <div class="field"></div>
       </div>
 
       <div class="divider"></div>
-      <div class="summary-card" id="bottomSummary" style="display:none"></div>
+
+      <!-- Actions grid (50/50) -->
+      <div class="actions-grid" id="actions">
+        <!-- Left: calculator card -->
+        <div class="cardlet" aria-labelledby="calcCardTitle">
+          <div class="icon" aria-hidden="true">
+            <!-- weight → syringe → vial icon -->
+            <svg width="34" height="34" viewBox="0 0 64 64" fill="none">
+              <rect x="6" y="32" width="18" height="18" rx="3" stroke="#333" stroke-width="2"/>
+              <rect x="10" y="36" width="10" height="10" rx="2" fill="#333"/>
+              <path d="M34 18 l8 8" stroke="#333" stroke-width="2"/>
+              <path d="M30 22 l8 8" stroke="#333" stroke-width="2"/>
+              <rect x="38" y="10" width="14" height="8" rx="2" fill="#333"/>
+              <rect x="40" y="20" width="10" height="18" rx="2" stroke="#333" stroke-width="2"/>
+            </svg>
+          </div>
+          <div>
+            <h4 id="calcCardTitle">Dose & vial calculator</h4>
+            <div class="subtle">Use the calculator to explore vial mixes; always verify with official guidance.</div>
+            <div style="margin-top:10px">
+              <button class="icon-btn" id="openCalc" title="Open dose & vial optimizer" aria-label="Open calculator" disabled aria-disabled="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="2" width="18" height="20" rx="3" stroke="#333" stroke-width="1.5"/>
+                  <rect x="7" y="5" width="10" height="4" rx="1.2" fill="#333"/>
+                  <g stroke="#333" stroke-width="1.4" stroke-linecap="round">
+                    <path d="M8.5 12h2.5M8.5 14.5h2.5"/>
+                    <path d="M13 12h2.5M13 14.5h2.5"/>
+                    <path d="M8.5 17h2.5M13 17h2.5"/>
+                  </g>
+                </svg>
+                <span class="k">Open calculator</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Right: TGA official guidance -->
+        <div class="cardlet">
+          <div class="icon" aria-hidden="true">
+            <svg width="34" height="34" viewBox="0 0 64 64" fill="none">
+              <path d="M10 52h44" stroke="#333" stroke-width="2"/>
+              <rect x="14" y="12" width="36" height="38" rx="3" stroke="#333" stroke-width="2"/>
+              <path d="M20 20h24M20 28h24M20 36h18" stroke="#333" stroke-width="2"/>
+            </svg>
+          </div>
+          <div>
+            <h4>View TGA official guidance</h4>
+            <div class="subtle">Consult Product Information before finalising.</div>
+            <div style="margin-top:10px">
+              <a href="#" class="btn secondary" id="tgaLink" target="_blank" rel="noopener" aria-label="Open TGA official guidance">Open guidance</a>
+              <span class="subtle"> // TODO: replace with actual TGA PI URL.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Inline summary (hidden until valid inputs) -->
+      <div id="inline" class="inline-summary" hidden>
+        <div id="calcLine" class="muted"></div>
+        <div class="muted" style="margin-top:2px">(exact to 2 dp; vial selection uses rounded-up requirement)</div>
+        <div style="margin-top:6px"><span class="k">Exact required dose:</span> <span id="exactDose" class="mono">0.00</span> mg</div>
+        <div style="margin-top:4px"><span class="k">Suggested (mixed):</span> <span id="mixLine" class="mono">—</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Vial inputs + suggestions -->
+      <div class="grid">
+        <div class="field">
+          <div class="label">Confirm number of 70 mg vials</div>
+          <input id="v70" type="number" min="0" step="1" value="0" />
+          <div class="subtle">
+            Suggestions:
+            <button class="pill" id="pill70">70-only ×0</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="label">Confirm number of 100 mg vials</div>
+          <input id="v100" type="number" min="0" step="1" value="0" />
+          <div class="subtle">
+            Suggestions:
+            <button class="pill" id="pill100">100-only ×0</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mixed best under both inputs -->
+      <div style="margin-top:8px">
+        <button id="pillMixed" class="pill" aria-pressed="false" aria-label="Apply mixed best suggestion">Mixed best ×a/×b</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Delta strip -->
+      <div id="delta" class="delta" aria-live="polite">
+        <div id="requiredLine" class="mono">Required (rounded): 0 mg</div>
+        <div id="deltaUnder" class="under mono" hidden>⬇ Under by: 0 mg</div>
+        <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0 mg (0.00%)</div>
+        <div class="bar" id="bar" style="--p:0%"></div>
+        <div class="footer-note">Advisory only. Final clinical decisions rest with HCP. Check PI.</div>
+      </div>
     </div>
   </main>
 
-  <!-- Optimizer Modal -->
-  <section class="modal" id="optimizerModal" aria-hidden="true" role="dialog" aria-label="Dose & Vial Optimizer">
-    <div class="backdrop" data-close></div>
-    <div class="sheet" role="document">
-      <div class="head">
-        <h3 class="title">Dose & Vial Optimizer — 70 mg / 100 mg</h3>
-        <button class="x" data-close aria-label="Close">×</button>
+  <!-- Modal -->
+  <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-hd">
+        <div>
+          <div id="modalTitle" class="k">Dose & Vial Optimizer</div>
+          <div class="modal-sub">Independent sandbox — does not change the form</div>
+          <div class="subtle">Advisory mode — shows top 3 least-waste options</div>
+        </div>
+        <button class="icon-btn" id="closeModal" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
       </div>
-      <div class="body">
+      <div class="modal-bd">
+        <div class="inline-summary" style="margin-bottom:12px">
+          <div class="k" style="margin-bottom:6px">Assumptions & method</div>
+          <ul style="margin:0 0 0 18px; padding:0; color:#444">
+            <li>Vial strengths considered: 70 mg and 100 mg.</li>
+            <li>Shows top 3 combinations ≥ required dose with least waste.</li>
+            <li>Tie-break: total vials, then total mg.</li>
+          </ul>
+        </div>
         <div class="grid">
           <div class="field">
-            <label class="label">Patient weight (kg)</label>
-            <input id="mWeight" type="number" min="0" step="0.1" class="input" />
+            <div class="label">Patient weight (kg)</div>
+            <input id="mWeight" type="number" min="0" step="0.1" placeholder="e.g., 91.3"/>
           </div>
           <div class="field">
-            <label class="label">Dose regimen (mg/kg)</label>
-            <select id="mDose" class="input">
-              <option value="" disabled selected>-- Select dose regimen --</option>
+            <div class="label">Dose regimen (mg/kg)</div>
+            <select id="mDose">
+              <option value="">-- Select dose regimen --</option>
               <option value="2.5">2.5 mg/kg (Start)</option>
               <option value="1.9">1.9 mg/kg (Reduced)</option>
             </select>
           </div>
           <div class="field">
-            <label class="label">Max vial option</label>
-            <div class="max-pill" aria-live="polite">Max vial option: <strong>10</strong></div>
-            <span class="hint">Two strengths only: 70 mg and 100 mg. No underdosing.</span>
+            <div class="label">Max vial option (display-only)</div>
+            <div class="badge" id="maxVialText" aria-live="polite">Max vial option: 10</div>
+            <div class="subtle">Non-editable; used internally to cap search.</div>
           </div>
         </div>
 
         <div class="divider"></div>
-        <div id="mSummary" class="summary-card">Enter weight to calculate.</div>
 
-        <div class="divider"></div>
-        <div class="table-wrap">
-          <table id="resultTable" style="display:none">
+        <div class="inline-summary">
+          <div id="mCalcLine" class="muted"></div>
+          <div style="margin-top:6px"><span class="k">Exact required dose:</span> <span id="mExact" class="mono">0.00</span> mg</div>
+        </div>
+
+        <div class="caption">Sorted by lowest waste first.</div>
+        <div style="margin-top:6px;overflow:auto">
+          <table id="results">
             <thead>
               <tr>
                 <th>Option</th>
-                <th>70 mg vials</th>
-                <th>100 mg vials</th>
+                <th>70 mg</th>
+                <th>100 mg</th>
                 <th>Total (mg)</th>
                 <th>Waste (mg)</th>
-                <th>Waste (%)</th>
-                <th>Total vials</th>
+                <th>Waste %</th>
               </tr>
             </thead>
-            <tbody id="resultBody"></tbody>
+            <tbody>
+              <!-- rows injected -->
+            </tbody>
           </table>
         </div>
       </div>
-      <div class="foot">
-        <button class="btn ghost" data-close>Close</button>
-        <div class="apply-wrap">
-          <button class="btn" id="applyToForm" disabled>Apply to form</button>
-          <small>Advisory mode: calculate here, then enter final selection on the form.</small>
-        </div>
+      <div class="modal-ft">
+        <button class="btn" id="apply" disabled title="Feature intentionally disabled in advisory mode">Apply to form</button>
+        <div class="subtle">Advisory mode: calculate here, then enter final selection on the form.</div>
       </div>
     </div>
-  </section>
+  </div>
 
-    <script>
-    // --- Helpers & State ---
-    const ADVISORY_MODE = true; // advisory mode keeps modal apply disabled
-    const $ = (id) => document.getElementById(id);
-    const V70 = 70,
-      V100 = 100;
-    const MAX_VIAL_OPTION = 10;
+<script>
+/* ---------------------------------------------
+   Feature flags
+----------------------------------------------*/
+const ADVISORY_MODE = true;
 
-    function fmt(n, d = 0) {
-      return Number(n).toLocaleString(undefined, {
-        minimumFractionDigits: d,
-        maximumFractionDigits: d,
-      });
+/* ---------------------------------------------
+   Helpers
+----------------------------------------------*/
+const el = id => document.getElementById(id);
+const fmt2 = n => Number(n).toFixed(2);
+const fmt0 = n => Math.round(Number(n)).toLocaleString();
+const pct2 = p => Number(p).toFixed(2);
+
+function computeExact(weight, doseMgPerKg){
+  return weight > 0 && doseMgPerKg > 0 ? weight * doseMgPerKg : 0;
+}
+// Rounded required for vial selection: round UP to integer mg.
+function roundedRequired(exact){
+  return Math.ceil(exact);
+}
+
+// Enumerate combos (70mg, 100mg) up to a cap; select those >= exact
+function enumerateOptions(exact, cap=10){
+  const out=[];
+  for(let a=0;a<=cap;a++){
+    for(let b=0;b<=cap;b++){
+      const total = a*70 + b*100;
+      if(total<=0) continue;
+      if(total < exact) continue; // only present >= exact
+      const waste = total - exact;
+      const wastePct = waste/total*100;
+      out.push({a,b,total,waste,wastePct});
     }
-    function fmtInput(n) {
-      return Number(n).toLocaleString(undefined, {
-        minimumFractionDigits: Number.isInteger(Number(n)) ? 0 : 1,
-        maximumFractionDigits: 2,
-      });
-    }
-    function exactDose(w, mg) {
-      if (!(w > 0) || !(mg > 0)) return NaN;
-      return Math.round(w * mg * 100) / 100;
-    } // 2dp
-    function roundedRequired(exact) {
-      return Math.ceil(exact);
-    } // for vial calc
+  }
+  // sort by least waste, then by total vials, then total mg
+  out.sort((x,y)=>{
+    if (x.waste!==y.waste) return x.waste - y.waste;
+    const vx = (x.a+x.b), vy=(y.a+y.b);
+    if (vx!==vy) return vx - vy;
+    return x.total - y.total;
+  });
+  return out;
+}
 
-    function enumerate(required, maxVials = MAX_VIAL_OPTION) {
-      const out = [];
-      const maxA = Math.min(maxVials, Math.ceil(required / V70) + 6);
-      const maxB = Math.min(maxVials, Math.ceil(required / V100) + 6);
-      for (let a = 0; a <= maxA; a++) {
-        for (let b = 0; b <= maxB; b++) {
-          const v = a + b;
-          if (v === 0 || v > maxVials) continue;
-          const total = a * V70 + b * V100;
-          if (total < required) continue;
-          const waste = total - required;
-          const wastePct = total ? waste / total : 0;
-          out.push({ a, b, total, waste, wastePct, totalVials: v });
-        }
-      }
-      out.sort((p, q) =>
-        p.waste !== q.waste
-          ? p.waste - q.waste
-          : p.totalVials - q.totalVials || p.total - q.total
-      );
-      return out;
-    }
+function bestSingles(exact, cap=10){
+  const n70 = Math.ceil(exact/70);
+  const n100 = Math.ceil(exact/100);
+  return { n70: Math.min(n70, cap), n100: Math.min(n100, cap) };
+}
 
-    let lastRequired = null;
-    let lastExact = null;
-    let lastBest = null;
-    let lastOnly70 = null;
-    let lastOnly100 = null;
+/* ---------------------------------------------
+   State, wiring & UI rules
+----------------------------------------------*/
+const state = {
+  dose: '',
+  weight: 0,
+  exact: 0,
+  rounded: 0,
+  bestMix: {a:0,b:0,total:0,waste:0,wastePct:0},
+  cap: 10
+};
 
-    function updateInline() {
-      const weightValue = parseFloat($('weight').value);
-      const doseValue = $('dose').value;
-      const doseNumber = parseFloat(doseValue);
-      const doseSelected = !!doseValue && !Number.isNaN(doseNumber);
-      const summaryBox = $('inlineSummary');
-      const optimizerBtn = $('openOptimizer');
-      const bottomSummary = $('bottomSummary');
+const inputs = {
+  weight: el('weight'),
+  dose: el('dose'),
+  v70: el('v70'),
+  v100: el('v100'),
+  pill70: el('pill70'),
+  pill100: el('pill100'),
+  pillMixed: el('pillMixed'),
+  openCalc: el('openCalc'),
+  inline: el('inline'),
+  calcLine: el('calcLine'),
+  exactDose: el('exactDose'),
+  mixLine: el('mixLine'),
+  requiredLine: el('requiredLine'),
+  deltaUnder: el('deltaUnder'),
+  deltaOk: el('deltaOk'),
+  bar: el('bar')
+};
 
-      if (!(weightValue > 0) || !doseSelected) {
-        summaryBox.style.display = 'none';
-        summaryBox.innerHTML = '';
-        optimizerBtn.disabled = true;
-        bottomSummary.style.display = 'none';
-        bottomSummary.innerHTML = '';
-        $('hint70').innerHTML = '';
-        $('hint100').innerHTML = '';
-        lastRequired = null;
-        lastExact = null;
-        lastBest = null;
-        lastOnly70 = null;
-        lastOnly100 = null;
-        updateDelta();
-        return;
-      }
+const modal = {
+  backdrop: el('backdrop'),
+  mWeight: el('mWeight'),
+  mDose: el('mDose'),
+  mCalcLine: el('mCalcLine'),
+  mExact: el('mExact'),
+  results: el('results').querySelector('tbody'),
+  maxVialText: el('maxVialText'),
+  close: el('closeModal'),
+  apply: el('apply')
+};
 
-      const exact = exactDose(weightValue, doseNumber);
-      if (!Number.isFinite(exact)) {
-        summaryBox.style.display = 'none';
-        summaryBox.innerHTML = '';
-        optimizerBtn.disabled = true;
-        bottomSummary.style.display = 'none';
-        bottomSummary.innerHTML = '';
-        $('hint70').innerHTML = '';
-        $('hint100').innerHTML = '';
-        lastRequired = null;
-        lastExact = null;
-        lastBest = null;
-        lastOnly70 = null;
-        lastOnly100 = null;
-        updateDelta();
-        return;
-      }
+// Reset form
+function resetForm(){
+  inputs.weight.value = '';
+  inputs.dose.value = '';
+  inputs.v70.value = 0;
+  inputs.v100.value = 0;
+  state.weight = 0; state.dose = ''; state.exact = 0; state.rounded = 0; state.bestMix = {a:0,b:0,total:0,waste:0,wastePct:0};
+  inputs.inline.hidden = true;
+  inputs.openCalc.disabled = true; inputs.openCalc.setAttribute('aria-disabled','true');
+  inputs.calcLine.textContent = '';
+  inputs.exactDose.textContent = '0.00';
+  inputs.mixLine.textContent = '—';
+  inputs.pill70.textContent = '70-only ×0'; delete inputs.pill70.dataset.n;
+  inputs.pill100.textContent = '100-only ×0'; delete inputs.pill100.dataset.n;
+  inputs.pillMixed.textContent = 'Mixed best ×a/×b';
+  inputs.requiredLine.textContent = 'Required (rounded): 0 mg';
+  inputs.deltaUnder.hidden = true; inputs.deltaOk.hidden = true; inputs.bar.style.setProperty('--p','0%');
+  // close modal if open
+  modal.backdrop.style.display='none';
+}
 
-      const required = roundedRequired(exact);
-      const options = enumerate(required, MAX_VIAL_OPTION);
-      if (!options.length) {
-        summaryBox.style.display = 'none';
-        summaryBox.innerHTML = '';
-        optimizerBtn.disabled = true;
-        bottomSummary.style.display = 'none';
-        bottomSummary.innerHTML = '';
-        $('hint70').innerHTML = '';
-        $('hint100').innerHTML = '';
-        lastRequired = null;
-        lastExact = null;
-        lastBest = null;
-        lastOnly70 = null;
-        lastOnly100 = null;
-        updateDelta();
-        return;
-      }
+el('resetBtn').addEventListener('click', resetForm);
 
-      const best = options[0];
-      const only70 = options.find((o) => o.b === 0) || { a: 0 };
-      const only100 = options.find((o) => o.a === 0) || { b: 0 };
+// Open/close modal
+inputs.openCalc.addEventListener('click', () => {
+  // start BLANK — do NOT mirror main form values
+  modal.mWeight.value = '';
+  modal.mDose.value = '';
+  modal.maxVialText.textContent = `Max vial option: ${state.cap}`;
+  refreshModal();
+  modal.backdrop.style.display='flex';
+});
+modal.close.addEventListener('click', () => modal.backdrop.style.display='none');
+modal.backdrop.addEventListener('click', (e)=>{ if(e.target===modal.backdrop) modal.backdrop.style.display='none'; });
 
-      lastRequired = required;
-      lastExact = exact;
-      lastBest = best;
-      lastOnly70 = only70;
-      lastOnly100 = only100;
+['input','change'].forEach(evt=>{
+  modal.mWeight.addEventListener(evt, refreshModal);
+  modal.mDose.addEventListener(evt, refreshModal);
+});
 
-      const calcLine = `Calculation: ${fmtInput(doseNumber)} mg/kg × ${fmtInput(weightValue)} kg = ${fmt(exact, 2)} mg (rounded up to ${fmt(required)} mg for vial selection).`;
-      const exactLine = `<strong>Exact required dose:</strong> ${fmt(exact, 2)} mg`;
-      const suggestionLine = `<strong>Suggested (mixed):</strong> ${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt(best.total)} mg · Waste ${fmt(best.waste)} mg / ${fmt(best.wastePct * 100, 2)}%)`;
+['input','change'].forEach(evt=>{
+  inputs.weight.addEventListener(evt, refreshMain);
+  inputs.dose.addEventListener(evt, refreshMain);
+  inputs.v70.addEventListener(evt, refreshDeltaStrip);
+  inputs.v100.addEventListener(evt, refreshDeltaStrip);
+});
 
-      summaryBox.innerHTML = `<span class="calc">${calcLine}</span><div>${exactLine}</div><div>${suggestionLine}</div>`;
-      summaryBox.style.display = 'block';
+// Suggestion pills — 70-only / 100-only (apply)
+inputs.pill70.addEventListener('click', ()=>{
+  inputs.v70.value = inputs.pill70.dataset.n ? Number(inputs.pill70.dataset.n) : 0;
+  inputs.v100.value = 0;
+  refreshDeltaStrip();
+});
+inputs.pill100.addEventListener('click', ()=>{
+  inputs.v100.value = inputs.pill100.dataset.n ? Number(inputs.pill100.dataset.n) : 0;
+  inputs.v70.value = 0;
+  refreshDeltaStrip();
+});
+// Mixed best: now APPLY both a/b
+inputs.pillMixed.addEventListener('click', ()=>{
+  if(state.bestMix && (state.bestMix.a>0 || state.bestMix.b>0)){
+    inputs.v70.value = state.bestMix.a;
+    inputs.v100.value = state.bestMix.b;
+    refreshDeltaStrip();
+  } else {
+    // tiny visual nudge
+    inputs.pillMixed.setAttribute('aria-pressed','true');
+    setTimeout(()=>inputs.pillMixed.setAttribute('aria-pressed','false'), 400);
+  }
+});
 
-      optimizerBtn.disabled = false;
+/* ---------------------------------------------
+   Main refreshers
+----------------------------------------------*/
+function refreshMain(){
+  const w = Number(inputs.weight.value||0);
+  const d = Number(inputs.dose.value||0);
+  state.weight = w;
+  state.dose = d? d.toString() : '';
+  const valid = (w>0 && d>0);
 
-      $('hint70').innerHTML = `Suggested <em>70-only</em>: <button type="button" class="pill" data-target="70" data-count="${only70.a || 0}" aria-pressed="false">70-only ×${fmt(only70.a || 0)}</button><span class="pill advisory" aria-hidden="true">Mixed best ×${fmt(best.a)}</span>`;
-      $('hint100').innerHTML = `Suggested <em>100-only</em>: <button type="button" class="pill" data-target="100" data-count="${only100.b || 0}" aria-pressed="false">100-only ×${fmt(only100.b || 0)}</button><span class="pill advisory" aria-hidden="true">Mixed best ×${fmt(best.b)}</span>`;
+  state.exact = computeExact(w,d);
+  state.rounded = roundedRequired(state.exact);
 
-      bottomSummary.innerHTML = `<strong>Summary</strong><br>${calcLine}<br><strong>Suggested mix:</strong> ${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt(best.total)} mg · Waste ${fmt(best.waste)} mg / ${fmt(best.wastePct * 100, 2)}%)`;
-      bottomSummary.style.display = 'block';
+  inputs.openCalc.disabled = !valid;
+  inputs.openCalc.setAttribute('aria-disabled', String(!valid));
 
-      updateDelta();
-    }
+  inputs.inline.hidden = !valid;
 
-    $('weight').addEventListener('input', updateInline);
-    $('dose').addEventListener('change', updateInline);
+  if(valid){
+    inputs.calcLine.textContent = `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(state.exact)} mg (rounded up to ${fmt0(state.rounded)} mg for vial selection).`;
+    const options = enumerateOptions(state.exact, state.cap);
+    const top3 = options.slice(0,3);
+    const best = top3[0] || {a:0,b:0,total:0,waste:0,wastePct:0};
+    state.bestMix = best;
 
-    function updateDelta() {
-      const strip = $('doseDelta');
-      if (!lastRequired) {
-        strip.style.display = 'none';
-        strip.innerHTML = '';
-        return;
-      }
-      const a = parseInt(($('vials70').value || '0'), 10);
-      const b = parseInt(($('vials100').value || '0'), 10);
-      const total = a * V70 + b * V100;
-      const under = total < lastRequired;
-      strip.classList.remove('ok', 'under');
-
-      let html = `<span class="required">Required (rounded): ${fmt(lastRequired)} mg</span>`;
-      if (under) {
-        const diff = lastRequired - total;
-        strip.classList.add('under');
-        html += `<div class="headline">⚠️ Under by: ${fmt(diff)} mg</div>`;
-        html += `<div class="bar under"><span></span></div>`;
-        html += `<span class="note">Guidance only. Please verify against PI and local policy.</span>`;
-      } else {
-        const waste = total - lastRequired;
-        const pct = total ? (waste / total) * 100 : 0;
-        strip.classList.add('ok');
-        html += `<div class="headline">Total ordered: ${fmt(total)} mg · Waste: ${fmt(waste)} mg (${fmt(pct, 2)}%)</div>`;
-        html += `<div class="bar"><span></span></div>`;
-        html += `<span class="note">Guidance only. Please verify against PI and local policy.</span>`;
-      }
-
-      strip.innerHTML = html;
-
-      const barSpan = strip.querySelector('.bar > span');
-      if (barSpan) {
-        const ratio = total / lastRequired;
-        const widthPercent = under
-          ? Math.max(0, Math.min(ratio, 1)) * 100
-          : (Math.min(Math.max(ratio, 0), 1.6) / 1.6) * 100;
-        barSpan.style.width = `${widthPercent}%`;
-      }
-
-      strip.style.display = 'block';
+    inputs.exactDose.textContent = fmt2(state.exact);
+    if(best && best.total>0){
+      inputs.mixLine.textContent = `${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt0(best.total)} mg · Waste ${fmt0(best.waste)} mg / ${pct2(best.wastePct)}%)`;
+      inputs.pillMixed.textContent = `Mixed best ×${best.a}/×${best.b}`;
+    }else{
+      inputs.mixLine.textContent = '—';
+      inputs.pillMixed.textContent = 'Mixed best ×a/×b';
     }
 
-    ['vials70', 'vials100'].forEach((id) =>
-      $(id).addEventListener('input', updateDelta)
-    );
+    const singles = bestSingles(state.exact, state.cap);
+    inputs.pill70.textContent = `70-only ×${singles.n70}`; inputs.pill70.dataset.n = String(singles.n70);
+    inputs.pill100.textContent = `100-only ×${singles.n100}`; inputs.pill100.dataset.n = String(singles.n100);
+  }else{
+    inputs.calcLine.textContent = '';
+    inputs.exactDose.textContent = '0.00';
+    inputs.mixLine.textContent = '—';
+    inputs.pill70.textContent = '70-only ×0'; delete inputs.pill70.dataset.n;
+    inputs.pill100.textContent = '100-only ×0'; delete inputs.pill100.dataset.n;
+    inputs.pillMixed.textContent = 'Mixed best ×a/×b';
+  }
 
-    ['hint70', 'hint100'].forEach((id) => {
-      $(id).addEventListener('click', (event) => {
-        const pill = event.target.closest('button.pill');
-        if (!pill) return;
-        const count = parseInt(pill.dataset.count || '0', 10);
-        if (pill.dataset.target === '70') {
-          $('vials70').value = count;
-          $('vials100').value = 0; // advisory mode: set paired vial count to zero for clarity
-        } else if (pill.dataset.target === '100') {
-          $('vials100').value = count;
-          $('vials70').value = 0; // advisory mode: set paired vial count to zero for clarity
-        }
-        updateDelta();
-      });
+  refreshDeltaStrip();
+}
+
+function refreshDeltaStrip(){
+  const total = Number(inputs.v70.value||0)*70 + Number(inputs.v100.value||0)*100;
+  const exact = state.exact;
+  const required = state.rounded;
+
+  inputs.requiredLine.textContent = `Required (rounded): ${fmt0(required)} mg`;
+
+  if(total < required){
+    inputs.deltaUnder.hidden = false;
+    inputs.deltaUnder.textContent = `⬇ Under by: ${fmt0(required - total)} mg`;
+    inputs.deltaOk.hidden = true;
+  }else{
+    const waste = total - exact;
+    const wastePct = total>0 ? waste/total*100 : 0;
+    inputs.deltaUnder.hidden = true;
+    inputs.deltaOk.hidden = false;
+    inputs.deltaOk.innerHTML = `Total ordered: ${fmt0(total)} mg · Waste: ${fmt0(waste)} mg (${pct2(wastePct)}%)`;
+  }
+  const p = required>0 ? Math.min(100, (total/required)*100) : 0;
+  inputs.bar.style.setProperty('--p', p.toFixed(1)+'%');
+}
+
+/* ---------------------------------------------
+   Modal refresh
+----------------------------------------------*/
+function refreshModal(){
+  const w = Number(modal.mWeight.value||0);
+  const d = Number(modal.mDose.value||0);
+  const valid = (w>0 && d>0);
+
+  const exact = valid ? computeExact(w,d) : 0;
+  const rounded = roundedRequired(exact);
+
+  modal.mCalcLine.textContent = valid
+    ? `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(exact)} mg (rounded up to ${fmt0(rounded)} mg for vial selection).`
+    : 'Set weight and dose to view options.';
+
+  modal.mExact.textContent = fmt2(exact);
+
+  modal.results.innerHTML = '';
+  if(valid){
+    const options = enumerateOptions(exact, state.cap).slice(0,3);
+    options.forEach((o,idx)=>{
+      const tr = document.createElement('tr');
+      if(idx===0) tr.classList.add('best');
+      tr.innerHTML = `
+        <td>Option ${idx+1}${idx===0 ? '<span class="check">Least waste</span>' : ''}</td>
+        <td class="num">${o.a}</td>
+        <td class="num">${o.b}</td>
+        <td class="num">${fmt0(o.total)}</td>
+        <td class="num waste">${fmt0(o.waste)}</td>
+        <td class="num wastepct">${pct2(o.wastePct)}%</td>
+      `;
+      modal.results.appendChild(tr);
     });
+  }
+  modal.apply.disabled = true;
+}
 
-    const modal = $('optimizerModal');
-    function openModal() {
-      const mainWeight = parseFloat($('weight').value);
-      $('mWeight').value = mainWeight > 0 ? $('weight').value : '';
-      const mainDoseValue = $('dose').value;
-      const modalDose = $('mDose');
-      modalDose.value = mainDoseValue || '';
-      if (!mainDoseValue) {
-        modalDose.selectedIndex = 0;
-      }
-      $('resultBody').innerHTML = '';
-      $('resultTable').style.display = 'none';
-      modal.classList.add('active');
-      modal.setAttribute('aria-hidden', 'false');
-      renderModal();
-    }
-    function closeModal() {
-      modal.classList.remove('active');
-      modal.setAttribute('aria-hidden', 'true');
-    }
-    $('openOptimizer').addEventListener('click', openModal);
-    modal.addEventListener('click', (e) => {
-      if (e.target.hasAttribute('data-close')) closeModal();
-    });
-
-    function renderModal() {
-      const weightValue = parseFloat($('mWeight').value);
-      const doseValue = $('mDose').value;
-      const doseNumber = parseFloat(doseValue);
-      const doseSelected = !!doseValue && !Number.isNaN(doseNumber);
-      const summary = $('mSummary');
-      const table = $('resultTable');
-      const body = $('resultBody');
-      const applyBtn = $('applyToForm');
-
-      if (!(weightValue > 0)) {
-        summary.textContent = 'Please enter patient weight.';
-        table.style.display = 'none';
-        applyBtn.disabled = true;
-        return;
-      }
-      if (!doseSelected) {
-        summary.textContent = 'Please select the patient dose regimen.';
-        table.style.display = 'none';
-        applyBtn.disabled = true;
-        return;
-      }
-
-      const exact = exactDose(weightValue, doseNumber);
-      const required = roundedRequired(exact);
-      const options = enumerate(required, MAX_VIAL_OPTION);
-
-      summary.innerHTML = `Calculation: ${fmtInput(doseNumber)} mg/kg × ${fmtInput(weightValue)} kg = <strong>${fmt(exact, 2)} mg</strong> (rounded up to <strong>${fmt(required)} mg</strong> for vial selection).`;
-
-      if (!options.length) {
-        table.style.display = 'none';
-        applyBtn.disabled = true;
-        return;
-      }
-
-      body.innerHTML = '';
-      const best = options[0];
-      options.slice(0, 3).forEach((opt, idx) => { // top-3 least waste options only
-        const tr = document.createElement('tr');
-        const optionCell = document.createElement('td');
-        optionCell.textContent = `Option ${idx + 1}`;
-        if (opt === best) {
-          optionCell.classList.add('option-best');
-          const badge = document.createElement('span');
-          badge.className = 'badge';
-          badge.textContent = 'Least waste';
-          optionCell.appendChild(badge);
-        }
-        tr.appendChild(optionCell);
-
-        const td70 = document.createElement('td');
-        td70.textContent = fmt(opt.a);
-        tr.appendChild(td70);
-        const td100 = document.createElement('td');
-        td100.textContent = fmt(opt.b);
-        tr.appendChild(td100);
-        const tdTotal = document.createElement('td');
-        tdTotal.textContent = fmt(opt.total);
-        tr.appendChild(tdTotal);
-        const tdWaste = document.createElement('td');
-        tdWaste.textContent = fmt(opt.waste);
-        if (opt === best) tdWaste.style.fontWeight = '700';
-        tr.appendChild(tdWaste);
-        const tdWastePct = document.createElement('td');
-        tdWastePct.textContent = `${fmt(opt.wastePct * 100, 2)}%`;
-        if (opt === best) tdWastePct.style.fontWeight = '700';
-        tr.appendChild(tdWastePct);
-        const tdVials = document.createElement('td');
-        tdVials.textContent = fmt(opt.totalVials);
-        tr.appendChild(tdVials);
-
-        body.appendChild(tr);
-      });
-
-      table.style.display = 'table';
-      applyBtn.dataset.combo = JSON.stringify({ a: best.a, b: best.b });
-      applyBtn.disabled = true;
-      if (!ADVISORY_MODE) {
-        applyBtn.disabled = false;
-      }
-    }
-
-    $('mWeight').addEventListener('input', renderModal);
-    $('mDose').addEventListener('change', renderModal);
-
-    $('applyToForm').addEventListener('click', () => {
-      if (ADVISORY_MODE) return;
-      const combo = JSON.parse(
-        $('applyToForm').dataset.combo || '{"a":0,"b":0}'
-      );
-      $('vials70').value = combo.a;
-      $('vials100').value = combo.b;
-      closeModal();
-      updateDelta();
-    });
-
-    updateInline();
-  </script>
+/* ---------------------------------------------
+   Init
+----------------------------------------------*/
+resetForm(); // ensure pristine on load
+</script>
 </body>
 </html>

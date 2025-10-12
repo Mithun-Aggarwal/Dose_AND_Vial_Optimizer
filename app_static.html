@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>HCP Infusion Planner — GSK Theme (Final v2)</title>
+<title>HCP Infusion Planner — GSK Theme (Final v3)</title>
 <style>
   :root{
     --brand:#FF6200; --brand-600:#E55A00; --brand-050:#FFF3E9;
@@ -17,7 +17,6 @@
 
   .infobar{background:var(--brand-050);color:#5A3100;border:1px solid #FFDCC4;border-radius:16px;
     padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin:0 0 16px}
-  .infobar a{color:var(--brand);font-weight:700;text-decoration:none}
   .title{font-size:1.5rem;font-weight:800;margin:0 0 14px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:var(--shadow)}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px}
@@ -71,8 +70,11 @@
   @media (max-width:860px){.actions-grid{grid-template-columns:1fr}}
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--shadow)}
 
-  /* Small inline TGA line */
-  .calc-hint{font-size:.9rem;color:var(--muted);margin-top:6px}
+  /* TGA hint: left aligned, single line, no extra spacing */
+  .calc-hint{
+    font-size:.9rem;color:var(--muted);margin-top:6px;margin-bottom:0;text-align:left;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;
+  }
 
   /* Modal */
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);align-items:center;justify-content:center;padding:20px;z-index:1000}
@@ -130,7 +132,7 @@
           <option value="2.5">2.5 mg/kg (Start)</option>
           <option value="1.9">1.9 mg/kg (Reduced)</option>
         </select>
-        <!-- small inline TGA hint (no separate block) -->
+        <!-- tiny inline TGA hint (no wrap, left aligned) -->
         <div id="calcHint" class="calc-hint" hidden></div>
       </div>
     </div>
@@ -171,7 +173,7 @@
 
     <div class="divider"></div>
 
-    <!-- Slim summary (will auto-hide once any vial is entered to avoid duplication) -->
+    <!-- Slim summary (auto-hides once any vial is >0 to avoid duplicate 'Under by') -->
     <div id="delta" class="inline-summary" aria-live="polite" hidden>
       <div id="deltaUnder" class="mono" hidden>⬇ Under by: 0.00 mg</div>
       <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0.00 mg (0.00%)</div>
@@ -351,22 +353,18 @@ function enumerateValidPlans(E, cap=10){
   const out=[];
   for(let a=0;a<=cap;a++){
     for(let b=0;b<=cap;b++){
-      const T = a*70 + b*100;
-      if(T<=0) continue;
-      if(T + EPS < E) continue;
-      const W = T - E; const Wpct = T>0 ? (W/T*100) : 0;
-      out.push({a,b,total:T,waste:W,wastePct:Wpct});
+      const T=a*70+b*100; if(T<=0) continue; if(T+EPS<E) continue;
+      const W=T-E, Wpct=T>0?(W/T*100):0; out.push({a,b,total:T,waste:W,wastePct:Wpct});
     }
   }
   out.sort((x,y)=>{
     if (Math.abs(x.waste - y.waste) > 1e-9) return x.waste - y.waste;
-    const vx = (x.a + x.b), vy = (y.a + y.b);
-    if (vx !== vy) return vx - vy;
+    const vx=(x.a+x.b), vy=(y.a+y.b); if(vx!==vy) return vx - vy;
     return x.total - y.total;
   });
   return out;
 }
-function singlesThatMeet(E, cap=10){ const n70=Math.min(Math.ceil(E/70),cap); const n100=Math.min(Math.ceil(E/100),cap); return {n70,n100}; }
+function singlesThatMeet(E, cap=10){ return { n70:Math.min(Math.ceil(E/70),cap), n100:Math.min(Math.ceil(E/100),cap) }; }
 function wasteBandLabel(pct){ if(pct<=25) return 'Low waste'; if(pct<=50) return 'Moderate waste'; return 'High waste'; }
 function compText(a,b){ const p=[]; if(a>0)p.push(`70×${a}`); if(b>0)p.push(`100×${b}`); return p.length?p.join(' + '):'—'; }
 
@@ -399,6 +397,7 @@ function resetForm(){
   state.weight=0; state.dose=0; state.E=0;
   inputs.calcHint.hidden = true;
   inputs.doseBarWrap.hidden=true; inputs.suggestionsRow.hidden=true; inputs.suggestionsRow.innerHTML='';
+  // delta is hidden on reset (no duplication)
   inputs.delta.hidden=true; inputs.deltaUnder.hidden=true; inputs.deltaOk.hidden=true;
   modal.mWeight.value=''; modal.mDose.value=''; modal.maxVialText.textContent=`Max vial option: ${state.cap}`;
   refreshModal();
@@ -445,7 +444,7 @@ function refreshMain(){
   const w=Number(inputs.weight.value||0), d=Number(inputs.dose.value||0); const ok=(w>0 && d>0);
   state.weight=w; state.dose=d; state.E= ok? exactDose(w,d):0;
 
-  // Small inline TGA line
+  // Tiny inline TGA line
   if(ok){
     inputs.calcHint.hidden=false;
     inputs.calcHint.innerHTML = `Based on TGA guideline — exact dose: <b>${fmt2(state.E)} mg</b> (${fmt2(state.dose)} mg/kg × ${fmt2(state.weight)} kg).`;
@@ -484,7 +483,7 @@ function refreshMain(){
   }
 
   updateDoseBar();
-  refreshDelta();
+  refreshDelta();   // also re-evaluate duplicate summary visibility
 }
 
 /* ===== Meter ===== */
@@ -530,12 +529,14 @@ function openSuggestionPopup(a,b,label){
 choice.backdrop.addEventListener('click',(e)=>{ if(e.target===choice.backdrop) choice.backdrop.style.display='none'; });
 choice.close.addEventListener('click',()=> choice.backdrop.style.display='none');
 
-/* ===== Slim summary (hide when vials entered) ===== */
+/* ===== Slim summary (hide when any vial > 0) ===== */
 function refreshDelta(){
   const a=Number(inputs.v70.value||0), b=Number(inputs.v100.value||0), T=a*70+b*100, E=state.E;
   const engaged=(a>0 || b>0);
-  if(engaged || !(E>0)){ inputs.delta.hidden=true; return; }  // avoid duplication when vials entered
-  // When no vials yet, show a simple "Under by" prompt relative to exact dose
+  if(engaged || !(E>0)){     // hide duplicate summary when vials exist OR no exact dose
+    inputs.delta.hidden=true; return;
+  }
+  // Otherwise (weight+dose set, no vials yet): show a single concise prompt
   inputs.delta.hidden=false;
   inputs.deltaUnder.hidden=false;
   inputs.deltaOk.hidden=true;

@@ -15,8 +15,9 @@
     --field:#f2f2f2;
     --border:#e6e6e6;
     --ok:#1f7a39;
-    --warn:#b55b00;
-    --under:#8a1a00;
+    --amber:#b55b00;
+    --red:#b00020;
+    --under:#000000;
     --radius:14px;
   }
   *{box-sizing:border-box}
@@ -39,6 +40,7 @@
   .btn.brand{background:var(--brand);border-color:var(--brand);color:#fff}
   .btn.secondary{background:#fff;border-color:var(--brand);color:var(--brand);font-weight:700}
   .btn.ghost{background:#fff;border-color:var(--border);color:#444}
+  .btn.block{display:block;width:100%;text-align:center}
   .btn[disabled]{opacity:.5;cursor:not-allowed}
   .icon-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer;padding:0 12px;gap:10px}
   .divider{height:1px;background:var(--border);margin:18px 0}
@@ -48,10 +50,17 @@
   .badge{display:inline-block;border:1px dashed var(--brand);color:var(--brand);padding:2px 8px;border-radius:999px;font-size:.8rem;font-weight:700}
   .pill{display:inline-block;background:#fff;border:1px solid var(--brand);color:var(--brand);font-weight:700;border-radius:999px;padding:6px 10px;margin-right:8px;cursor:pointer}
   .pill:focus{outline:3px solid rgba(143,14,26,.18)}
+  .center{display:flex;justify-content:center;align-items:center;gap:8px}
   .delta{display:flex;flex-direction:column;gap:6px;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff}
-  /* New progress bar with color bands */
+  /* New progress bar + legend */
   .bar{height:10px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
   .bar-fill{position:absolute;left:0;top:0;bottom:0;width:var(--w,0%);background:#000}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.85rem;color:#444}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .dot-green{background:var(--ok)}
+  .dot-amber{background:var(--amber)}
+  .dot-red{background:var(--red)}
+  .dot-black{background:var(--under)}
   .k{font-weight:700}
   .footer-note{font-size:.9rem;color:var(--muted)}
 
@@ -62,25 +71,16 @@
   .cardlet .icon{margin-top:2px}
   .cardlet h4{margin:0 0 6px;font-size:1rem}
 
-  /* Utilities row */
-  .row-end{display:flex;gap:10px;justify-content:flex-end;align-items:center}
-
-  /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.28);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
-  .modal{max-width:860px;width:100%;background:#fff;border-radius:18px;border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,.18);overflow:hidden}
-  .modal-hd{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-  .modal-sub{font-size:.9rem;color:#5d5d5d}
-  .modal-bd{padding:16px 18px}
-  .modal-ft{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;align-items:center}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:10px 8px;border-bottom:1px solid var(--border)}
-  th{text-align:right;color:#444;font-weight:800}
-  th:first-child, td:first-child{text-align:left}
-  td.num{text-align:right}
-  .best{background:rgba(31,122,57,.06)}
-  .best .waste, .best .wastepct{font-weight:900}
-  .check{display:inline-block;margin-left:8px;border:1px solid var(--ok);color:var(--ok);padding:2px 6px;border-radius:6px;font-size:.75rem}
-  .caption{font-size:.9rem;color:#555;margin:8px 0 4px}
+  /* Tooltip wrapper for disabled button */
+  .tip{position:relative;display:inline-block}
+  .tip::after{
+    content:attr(data-tip);
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom:calc(100% + 8px);
+    background:#111; color:#fff; font-size:.85rem; padding:6px 8px; border-radius:6px;
+    white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s ease;
+  }
+  .tip:hover::after{opacity:.95}
 </style>
 </head>
 <body>
@@ -129,7 +129,6 @@
         <!-- Left: calculator card -->
         <div class="cardlet" aria-labelledby="calcCardTitle">
           <div class="icon" aria-hidden="true">
-            <!-- weight → syringe → vial icon -->
             <svg width="34" height="34" viewBox="0 0 64 64" fill="none">
               <rect x="6" y="32" width="18" height="18" rx="3" stroke="#333" stroke-width="2"/>
               <rect x="10" y="36" width="10" height="10" rx="2" fill="#333"/>
@@ -143,18 +142,21 @@
             <h4 id="calcCardTitle">Dose & vial calculator</h4>
             <div class="subtle">Use the calculator to explore vial mixes; always verify with official guidance.</div>
             <div style="margin-top:10px">
-              <button class="icon-btn" id="openCalc" title="Open dose & vial optimizer" aria-label="Open calculator" disabled aria-disabled="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="3" y="2" width="18" height="20" rx="3" stroke="#333" stroke-width="1.5"/>
-                  <rect x="7" y="5" width="10" height="4" rx="1.2" fill="#333"/>
-                  <g stroke="#333" stroke-width="1.4" stroke-linecap="round">
-                    <path d="M8.5 12h2.5M8.5 14.5h2.5"/>
-                    <path d="M13 12h2.5M13 14.5h2.5"/>
-                    <path d="M8.5 17h2.5M13 17h2.5"/>
-                  </g>
-                </svg>
-                <span class="k">Open calculator</span>
-              </button>
+              <!-- Tooltip wrapper shows hint even when button is disabled -->
+              <div class="tip" id="openCalcTip" data-tip="Enter weight and dose to enable">
+                <button class="icon-btn" id="openCalc" title="Open dose & vial optimizer" aria-label="Open calculator" disabled aria-disabled="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="2" width="18" height="20" rx="3" stroke="#333" stroke-width="1.5"/>
+                    <rect x="7" y="5" width="10" height="4" rx="1.2" fill="#333"/>
+                    <g stroke="#333" stroke-width="1.4" stroke-linecap="round">
+                      <path d="M8.5 12h2.5M8.5 14.5h2.5"/>
+                      <path d="M13 12h2.5M13 14.5h2.5"/>
+                      <path d="M8.5 17h2.5M13 17h2.5"/>
+                    </g>
+                  </svg>
+                  <span class="k">Open calculator</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -175,11 +177,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Utilities row -->
-      <div class="row row-end" style="margin-top:6px">
-        <button id="resetBtn" class="btn ghost" aria-label="Reset form">Reset</button>
       </div>
 
       <div class="divider"></div>
@@ -214,21 +211,32 @@
         </div>
       </div>
 
-      <!-- Mixed best under both inputs (single, more informative) -->
-      <div style="margin-top:8px">
+      <!-- Mixed best (centered, only visible when valid) -->
+      <div id="mixedWrap" class="center" hidden style="margin-top:8px">
         <button id="pillMixed" class="pill" aria-pressed="false" aria-label="Apply mixed best suggestion">Mixed best: —</button>
       </div>
 
       <div class="divider"></div>
 
-      <!-- Delta strip -->
-      <div id="delta" class="delta" aria-live="polite">
+      <!-- Delta strip (only visible when valid) -->
+      <div id="delta" class="delta" aria-live="polite" hidden>
         <div id="requiredLine" class="mono">Required (rounded): 0 mg</div>
         <div id="deltaUnder" class="mono" style="color:#000" hidden>⬇ Under by: 0 mg</div>
         <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0 mg (0.00%)</div>
         <div class="bar" id="bar"><div class="bar-fill" id="barFill"></div></div>
-        <div class="footer-note" id="barLegend">Waste bands: 0–25% green, 25–50% yellow, >50% red; below required = black.</div>
+        <div class="legend" id="legend">
+          <span class="dot dot-green"></span> 0–25% waste
+          <span class="dot dot-amber"></span> 25–50%
+          <span class="dot dot-red"></span> >50%
+          <span class="dot dot-black"></span> Under required
+        </div>
         <div class="footer-note">Advisory only. Final clinical decisions rest with HCP. Check PI.</div>
+      </div>
+
+      <!-- Bottom reset (full width) -->
+      <div class="divider"></div>
+      <div class="reset-row">
+        <button id="resetBtn" class="btn ghost block" aria-label="Reset form">Reset</button>
       </div>
     </div>
   </main>
@@ -325,25 +333,21 @@ const pct2 = p => Number(p).toFixed(2);
 function computeExact(weight, doseMgPerKg){
   return weight > 0 && doseMgPerKg > 0 ? weight * doseMgPerKg : 0;
 }
-// Rounded required for vial selection: round UP to integer mg.
-function roundedRequired(exact){
-  return Math.ceil(exact);
-}
+function roundedRequired(exact){ return Math.ceil(exact); }
 
-// Enumerate combos (70mg, 100mg) up to a cap; select those >= exact
+// Enumerate combos ≥ exact
 function enumerateOptions(exact, cap=10){
   const out=[];
   for(let a=0;a<=cap;a++){
     for(let b=0;b<=cap;b++){
       const total = a*70 + b*100;
       if(total<=0) continue;
-      if(total < exact) continue; // only present >= exact
+      if(total < exact) continue;
       const waste = total - exact;
       const wastePct = waste/total*100;
       out.push({a,b,total,waste,wastePct});
     }
   }
-  // sort by least waste, then by total vials, then total mg
   out.sort((x,y)=>{
     if (x.waste!==y.waste) return x.waste - y.waste;
     const vx = (x.a+x.b), vy=(y.a+y.b);
@@ -352,7 +356,6 @@ function enumerateOptions(exact, cap=10){
   });
   return out;
 }
-
 function bestSingles(exact, cap=10){
   const n70 = Math.ceil(exact/70);
   const n100 = Math.ceil(exact/100);
@@ -360,7 +363,7 @@ function bestSingles(exact, cap=10){
 }
 
 /* ---------------------------------------------
-   State, wiring & UI rules
+   State
 ----------------------------------------------*/
 const state = {
   dose: '',
@@ -379,7 +382,9 @@ const inputs = {
   pill70: el('pill70'),
   pill100: el('pill100'),
   pillMixed: el('pillMixed'),
+  mixedWrap: el('mixedWrap'),
   openCalc: el('openCalc'),
+  openCalcTip: el('openCalcTip'),
   inline: el('inline'),
   calcLine: el('calcLine'),
   exactDose: el('exactDose'),
@@ -387,7 +392,7 @@ const inputs = {
   requiredLine: el('requiredLine'),
   deltaUnder: el('deltaUnder'),
   deltaOk: el('deltaOk'),
-  bar: el('bar'),
+  delta: el('delta'),
   barFill: el('barFill')
 };
 
@@ -397,39 +402,60 @@ const modal = {
   mDose: el('mDose'),
   mCalcLine: el('mCalcLine'),
   mExact: el('mExact'),
-  results: el('results').querySelector('tbody'),
+  results: document.querySelector('#results tbody'),
   maxVialText: el('maxVialText'),
   close: el('closeModal'),
   apply: el('apply')
 };
 
-// Reset form
+/* ---------------------------------------------
+   Reset
+----------------------------------------------*/
 function resetForm(){
   inputs.weight.value = '';
   inputs.dose.value = '';
   inputs.v70.value = 0;
   inputs.v100.value = 0;
-  state.weight = 0; state.dose = ''; state.exact = 0; state.rounded = 0; state.bestMix = {a:0,b:0,total:0,waste:0,wastePct:0};
+
+  state.weight = 0;
+  state.dose = '';
+  state.exact = 0;
+  state.rounded = 0;
+  state.bestMix = {a:0,b:0,total:0,waste:0,wastePct:0};
+
+  // UI resets
   inputs.inline.hidden = true;
-  inputs.openCalc.disabled = true; inputs.openCalc.setAttribute('aria-disabled','true');
+  inputs.mixedWrap.hidden = true;
+  inputs.delta.hidden = true;
+
+  inputs.openCalc.disabled = true;
+  inputs.openCalc.setAttribute('aria-disabled','true');
+  inputs.openCalcTip?.setAttribute('data-tip','Enter weight and dose to enable');
+
   inputs.calcLine.textContent = '';
   inputs.exactDose.textContent = '0.00';
   inputs.mixLine.textContent = '—';
+
   inputs.pill70.textContent = '70-only ×0'; delete inputs.pill70.dataset.n;
   inputs.pill100.textContent = '100-only ×0'; delete inputs.pill100.dataset.n;
   inputs.pillMixed.textContent = 'Mixed best: —';
+
   inputs.requiredLine.textContent = 'Required (rounded): 0 mg';
-  inputs.deltaUnder.hidden = true; inputs.deltaOk.hidden = true;
+  inputs.deltaUnder.hidden = true;
+  inputs.deltaOk.hidden = true;
   inputs.barFill.style.setProperty('--w','0%');
   inputs.barFill.style.background = '#000';
+
   // close modal if open
   modal.backdrop.style.display='none';
 }
-
-// Open/close modal
 el('resetBtn').addEventListener('click', resetForm);
+
+/* ---------------------------------------------
+   Modal open/close
+----------------------------------------------*/
 inputs.openCalc.addEventListener('click', () => {
-  // start BLANK — sandbox does not mirror main form values
+  // sandbox modal starts blank by design
   modal.mWeight.value = '';
   modal.mDose.value = '';
   modal.maxVialText.textContent = `Max vial option: ${state.cap}`;
@@ -438,12 +464,14 @@ inputs.openCalc.addEventListener('click', () => {
 });
 modal.close.addEventListener('click', () => modal.backdrop.style.display='none');
 modal.backdrop.addEventListener('click', (e)=>{ if(e.target===modal.backdrop) modal.backdrop.style.display='none'; });
-
 ['input','change'].forEach(evt=>{
   modal.mWeight.addEventListener(evt, refreshModal);
   modal.mDose.addEventListener(evt, refreshModal);
 });
 
+/* ---------------------------------------------
+   Suggestions handlers
+----------------------------------------------*/
 ['input','change'].forEach(evt=>{
   inputs.weight.addEventListener(evt, refreshMain);
   inputs.dose.addEventListener(evt, refreshMain);
@@ -451,7 +479,6 @@ modal.backdrop.addEventListener('click', (e)=>{ if(e.target===modal.backdrop) mo
   inputs.v100.addEventListener(evt, refreshDeltaStrip);
 });
 
-// Suggestion pills — 70-only / 100-only (apply)
 inputs.pill70.addEventListener('click', ()=>{
   inputs.v70.value = inputs.pill70.dataset.n ? Number(inputs.pill70.dataset.n) : 0;
   inputs.v100.value = 0;
@@ -462,11 +489,11 @@ inputs.pill100.addEventListener('click', ()=>{
   inputs.v70.value = 0;
   refreshDeltaStrip();
 });
-// Mixed best: confirm then APPLY both a/b
+
+// Mixed best (confirm before apply to keep HCP in control)
 inputs.pillMixed.addEventListener('click', ()=>{
   if(state.bestMix && (state.bestMix.a>0 || state.bestMix.b>0)){
-    const label = `Apply ${state.bestMix.a}×70 & ${state.bestMix.b}×100 to the form? This only fills the fields.`;
-    const ok = confirm(label);
+    const ok = confirm(`Apply ${state.bestMix.a}×70 & ${state.bestMix.b}×100 to the form? This only fills the fields.`);
     if(ok){
       inputs.v70.value = state.bestMix.a;
       inputs.v100.value = state.bestMix.b;
@@ -491,10 +518,15 @@ function refreshMain(){
   state.exact = computeExact(w,d);
   state.rounded = roundedRequired(state.exact);
 
+  // Calc button enable + tooltip text
   inputs.openCalc.disabled = !valid;
   inputs.openCalc.setAttribute('aria-disabled', String(!valid));
+  inputs.openCalcTip?.setAttribute('data-tip', valid ? 'Open calculator' : 'Enter weight and dose to enable');
 
+  // Show/hide inline summary, mixed best, delta
   inputs.inline.hidden = !valid;
+  inputs.mixedWrap.hidden = !valid;
+  inputs.delta.hidden = !valid;
 
   if(valid){
     inputs.calcLine.textContent = `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(state.exact)} mg (rounded up to ${fmt0(state.rounded)} mg for vial selection).`;
@@ -532,8 +564,10 @@ function refreshDeltaStrip(){
   const exact = state.exact;
   const required = state.rounded;
 
+  // required line
   inputs.requiredLine.textContent = `Required (rounded): ${fmt0(required)} mg`;
 
+  // under/ok blocks
   if(total < required){
     inputs.deltaUnder.hidden = false;
     inputs.deltaUnder.textContent = `⬇ Under by: ${fmt0(required - total)} mg`;
@@ -546,17 +580,16 @@ function refreshDeltaStrip(){
     inputs.deltaOk.innerHTML = `Total ordered: ${fmt0(total)} mg · Waste: ${fmt0(waste)} mg (${pct2(wastePct)}%)`;
   }
 
-  // New bar fill & color logic
+  // progress bar width vs required, and color by waste bands
   const fillPct = required>0 ? Math.min(100, (total/required)*100) : 0;
   let barColor = '#000'; // black when under
+
   if(total >= required && total > 0){
     const waste = Math.max(0, total - exact);
     const wastePct = total>0 ? (waste/total*100) : 0;
-    if (wastePct <= 25) barColor = '#1f7a39';      // green
-    else if (wastePct <= 50) barColor = '#b55b00'; // yellow
-    else barColor = '#b00020';                     // red
-  } else {
-    barColor = '#000';
+    if (wastePct <= 25) barColor = getComputedStyle(document.documentElement).getPropertyValue('--ok').trim() || '#1f7a39';
+    else if (wastePct <= 50) barColor = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#b55b00';
+    else barColor = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#b00020';
   }
   inputs.barFill.style.setProperty('--w', fillPct.toFixed(1)+'%');
   inputs.barFill.style.background = barColor;
@@ -602,7 +635,7 @@ function refreshModal(){
 /* ---------------------------------------------
    Init
 ----------------------------------------------*/
-resetForm(); // ensure pristine on load
+resetForm(); // pristine on load
 </script>
 </body>
 </html>

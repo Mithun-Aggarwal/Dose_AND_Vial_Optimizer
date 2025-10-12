@@ -70,10 +70,9 @@
   @media (max-width:860px){.actions-grid{grid-template-columns:1fr}}
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--shadow)}
 
-  /* TGA hint: left aligned, single line, no extra spacing */
   .calc-hint{
-    font-size:.9rem;color:var(--muted);margin-top:6px;margin-bottom:0;text-align:left;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;
+    font-size:.9rem;color:var(--muted);margin-top:6px;
+    display:inline-block;white-space:nowrap;margin-bottom:0;text-overflow:ellipsis;overflow:hidden;
   }
 
   /* Modal */
@@ -98,7 +97,6 @@
   <div class="title">Please answer the following question:</div>
 
   <div class="card">
-    <!-- Scheduling -->
     <div class="section-h">Scheduling</div>
     <p class="section-sub">These dates are locked by protocol.</p>
     <div class="grid">
@@ -114,7 +112,6 @@
 
     <div class="divider"></div>
 
-    <!-- Dose inputs -->
     <div class="section-h">Dose inputs</div>
     <p class="section-sub">Enter weight and confirm the dose regimen. Advisory only — verify with PI/local policy.</p>
     <div class="grid">
@@ -124,6 +121,7 @@
           <input id="weight" type="number" min="0" step="0.1" placeholder="e.g., 91.3" aria-label="Patient weight in kilograms"/>
           <span class="unit">kg</span>
         </div>
+        <div id="calcHint" class="calc-hint" hidden></div>
       </div>
       <div class="field">
         <div class="label">Confirm patient’s treatment dose <span class="muted">*</span></div>
@@ -132,14 +130,11 @@
           <option value="2.5">2.5 mg/kg (Start)</option>
           <option value="1.9">1.9 mg/kg (Reduced)</option>
         </select>
-        <!-- tiny inline TGA hint (no wrap, left aligned) -->
-        <div id="calcHint" class="calc-hint" hidden></div>
       </div>
     </div>
 
     <div class="divider"></div>
 
-    <!-- Vials (fluid; no heading/help) -->
     <div class="grid">
       <div class="field">
         <div class="label">Confirm number of 70 mg vials</div>
@@ -151,7 +146,6 @@
       </div>
     </div>
 
-    <!-- Meter -->
     <div id="doseBarWrap" class="dosebar-wrap" hidden>
       <div class="dosebar-label">Suggested vial composition &amp; waste meter (experimental)</div>
       <div class="bar" id="doseBar">
@@ -168,21 +162,10 @@
       </div>
     </div>
 
-    <!-- Suggestions (built and sorted dynamically) -->
     <div id="suggestionsRow" class="center" hidden style="margin-top:10px"></div>
 
     <div class="divider"></div>
 
-    <!-- Slim summary (auto-hides once any vial is >0 to avoid duplicate 'Under by') -->
-    <div id="delta" class="inline-summary" aria-live="polite" hidden>
-      <div id="deltaUnder" class="mono" hidden>⬇ Under by: 0.00 mg</div>
-      <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0.00 mg (0.00%)</div>
-      <div class="muted" style="margin-top:6px">Advisory only. Verify with PI / local policy.</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Actions -->
     <div class="actions-grid">
       <div class="cardlet" aria-labelledby="calcCardTitle">
         <div class="icon" aria-hidden="true">
@@ -237,7 +220,6 @@
   </div>
 </main>
 
-<!-- Calculator Modal -->
 <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <div class="modal-hd">
@@ -296,7 +278,7 @@
               <th style="border:1px solid var(--border);padding:8px 10px;text-align:right">Waste %</th>
             </tr>
           </thead>
-          <tbody><!-- rows injected --></tbody>
+          <tbody></tbody>
         </table>
       </div>
     </div>
@@ -307,7 +289,6 @@
   </div>
 </div>
 
-<!-- Suggestion Popup -->
 <div id="choiceBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="modal" style="max-width:720px">
     <div class="modal-bd">
@@ -375,7 +356,6 @@ const inputs = {
   doseBarWrap: el('doseBarWrap'), doseBarFill: el('doseBarFill'),
   doseBarMarker: el('doseBarMarker'), doseBarMarkerLabel: el('doseBarMarkerLabel'), doseBarText: el('doseBarText'),
   suggestionsRow: el('suggestionsRow'),
-  delta: el('delta'), deltaUnder: el('deltaUnder'), deltaOk: el('deltaOk'),
   openCalc: el('openCalc'), resetBtn: el('resetBtn')
 };
 const modal = {
@@ -397,8 +377,6 @@ function resetForm(){
   state.weight=0; state.dose=0; state.E=0;
   inputs.calcHint.hidden = true;
   inputs.doseBarWrap.hidden=true; inputs.suggestionsRow.hidden=true; inputs.suggestionsRow.innerHTML='';
-  // delta is hidden on reset (no duplication)
-  inputs.delta.hidden=true; inputs.deltaUnder.hidden=true; inputs.deltaOk.hidden=true;
   modal.mWeight.value=''; modal.mDose.value=''; modal.maxVialText.textContent=`Max vial option: ${state.cap}`;
   refreshModal();
 }
@@ -437,8 +415,8 @@ function refreshModal(){
 ['input','change'].forEach(evt=>{
   inputs.weight.addEventListener(evt, refreshMain);
   inputs.dose.addEventListener(evt, refreshMain);
-  inputs.v70.addEventListener(evt, ()=>{ updateDoseBar(); refreshDelta(); });
-  inputs.v100.addEventListener(evt, ()=>{ updateDoseBar(); refreshDelta(); });
+  inputs.v70.addEventListener(evt, updateDoseBar);
+  inputs.v100.addEventListener(evt, updateDoseBar);
 });
 function refreshMain(){
   const w=Number(inputs.weight.value||0), d=Number(inputs.dose.value||0); const ok=(w>0 && d>0);
@@ -447,7 +425,8 @@ function refreshMain(){
   // Tiny inline TGA line
   if(ok){
     inputs.calcHint.hidden=false;
-    inputs.calcHint.innerHTML = `Based on TGA guideline — exact dose: <b>${fmt2(state.E)} mg</b> (${fmt2(state.dose)} mg/kg × ${fmt2(state.weight)} kg).`;
+    // UPDATED to be more formal and compliant
+    inputs.calcHint.innerHTML = `TGA recommended dose: ${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b>`;
   } else {
     inputs.calcHint.hidden=true;
   }
@@ -483,7 +462,6 @@ function refreshMain(){
   }
 
   updateDoseBar();
-  refreshDelta();   // also re-evaluate duplicate summary visibility
 }
 
 /* ===== Meter ===== */
@@ -528,20 +506,6 @@ function openSuggestionPopup(a,b,label){
 }
 choice.backdrop.addEventListener('click',(e)=>{ if(e.target===choice.backdrop) choice.backdrop.style.display='none'; });
 choice.close.addEventListener('click',()=> choice.backdrop.style.display='none');
-
-/* ===== Slim summary (hide when any vial > 0) ===== */
-function refreshDelta(){
-  const a=Number(inputs.v70.value||0), b=Number(inputs.v100.value||0), T=a*70+b*100, E=state.E;
-  const engaged=(a>0 || b>0);
-  if(engaged || !(E>0)){     // hide duplicate summary when vials exist OR no exact dose
-    inputs.delta.hidden=true; return;
-  }
-  // Otherwise (weight+dose set, no vials yet): show a single concise prompt
-  inputs.delta.hidden=false;
-  inputs.deltaUnder.hidden=false;
-  inputs.deltaOk.hidden=true;
-  inputs.deltaUnder.textContent=`⬇ Under by: ${fmt2(E - T)} mg`;
-}
 
 /* Boot */
 document.addEventListener('DOMContentLoaded', resetForm);

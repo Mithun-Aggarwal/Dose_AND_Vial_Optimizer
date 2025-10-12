@@ -23,7 +23,7 @@
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji"}
   .wrap{max-width:1100px;margin:40px auto;padding:0 20px}
   .title{font-size:1.6rem;font-weight:800;margin:0 0 14px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 20px;position:relative}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 20px}
   .subtle{color:var(--muted)}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px}
   @media (max-width:860px){.grid{grid-template-columns:1fr}}
@@ -49,7 +49,9 @@
   .pill{display:inline-block;background:#fff;border:1px solid var(--brand);color:var(--brand);font-weight:700;border-radius:999px;padding:6px 10px;margin-right:8px;cursor:pointer}
   .pill:focus{outline:3px solid rgba(143,14,26,.18)}
   .delta{display:flex;flex-direction:column;gap:6px;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff}
-  .bar{height:8px;background:linear-gradient(90deg, var(--brand) 0%, var(--brand) var(--p) , #eee var(--p) , #eee 100%);border-radius:999px}
+  /* New progress bar with color bands */
+  .bar{height:10px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
+  .bar-fill{position:absolute;left:0;top:0;bottom:0;width:var(--w,0%);background:#000}
   .k{font-weight:700}
   .footer-note{font-size:.9rem;color:var(--muted)}
 
@@ -59,6 +61,9 @@
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
   .cardlet .icon{margin-top:2px}
   .cardlet h4{margin:0 0 6px;font-size:1rem}
+
+  /* Utilities row */
+  .row-end{display:flex;gap:10px;justify-content:flex-end;align-items:center}
 
   /* Modal */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.28);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
@@ -76,18 +81,12 @@
   .best .waste, .best .wastepct{font-weight:900}
   .check{display:inline-block;margin-left:8px;border:1px solid var(--ok);color:var(--ok);padding:2px 6px;border-radius:6px;font-size:.75rem}
   .caption{font-size:.9rem;color:#555;margin:8px 0 4px}
-
-  /* Reset button placement */
-  .reset-wrap{position:absolute;top:18px;right:18px}
 </style>
 </head>
 <body>
   <main class="wrap">
     <div class="title">Please answer the following question:</div>
     <div class="card">
-      <div class="reset-wrap">
-        <button id="resetBtn" class="btn ghost" aria-label="Reset form">Reset</button>
-      </div>
       <div class="grid">
         <!-- Dates (locked) -->
         <div class="field">
@@ -172,11 +171,15 @@
             <h4>View TGA official guidance</h4>
             <div class="subtle">Consult Product Information before finalising.</div>
             <div style="margin-top:10px">
-              <a href="#" class="btn secondary" id="tgaLink" target="_blank" rel="noopener" aria-label="Open TGA official guidance">Open guidance</a>
-              <span class="subtle"> // TODO: replace with actual TGA PI URL.</span>
+              <a href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd" class="btn secondary" id="tgaLink" target="_blank" rel="noopener" aria-label="Open TGA official guidance">Open guidance</a>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Utilities row -->
+      <div class="row row-end" style="margin-top:6px">
+        <button id="resetBtn" class="btn ghost" aria-label="Reset form">Reset</button>
       </div>
 
       <div class="divider"></div>
@@ -211,9 +214,9 @@
         </div>
       </div>
 
-      <!-- Mixed best under both inputs -->
+      <!-- Mixed best under both inputs (single, more informative) -->
       <div style="margin-top:8px">
-        <button id="pillMixed" class="pill" aria-pressed="false" aria-label="Apply mixed best suggestion">Mixed best ×a/×b</button>
+        <button id="pillMixed" class="pill" aria-pressed="false" aria-label="Apply mixed best suggestion">Mixed best: —</button>
       </div>
 
       <div class="divider"></div>
@@ -221,9 +224,10 @@
       <!-- Delta strip -->
       <div id="delta" class="delta" aria-live="polite">
         <div id="requiredLine" class="mono">Required (rounded): 0 mg</div>
-        <div id="deltaUnder" class="under mono" hidden>⬇ Under by: 0 mg</div>
+        <div id="deltaUnder" class="mono" style="color:#000" hidden>⬇ Under by: 0 mg</div>
         <div id="deltaOk" class="mono" hidden>Total ordered: 0 mg · Waste: 0 mg (0.00%)</div>
-        <div class="bar" id="bar" style="--p:0%"></div>
+        <div class="bar" id="bar"><div class="bar-fill" id="barFill"></div></div>
+        <div class="footer-note" id="barLegend">Waste bands: 0–25% green, 25–50% yellow, >50% red; below required = black.</div>
         <div class="footer-note">Advisory only. Final clinical decisions rest with HCP. Check PI.</div>
       </div>
     </div>
@@ -383,7 +387,8 @@ const inputs = {
   requiredLine: el('requiredLine'),
   deltaUnder: el('deltaUnder'),
   deltaOk: el('deltaOk'),
-  bar: el('bar')
+  bar: el('bar'),
+  barFill: el('barFill')
 };
 
 const modal = {
@@ -412,18 +417,19 @@ function resetForm(){
   inputs.mixLine.textContent = '—';
   inputs.pill70.textContent = '70-only ×0'; delete inputs.pill70.dataset.n;
   inputs.pill100.textContent = '100-only ×0'; delete inputs.pill100.dataset.n;
-  inputs.pillMixed.textContent = 'Mixed best ×a/×b';
+  inputs.pillMixed.textContent = 'Mixed best: —';
   inputs.requiredLine.textContent = 'Required (rounded): 0 mg';
-  inputs.deltaUnder.hidden = true; inputs.deltaOk.hidden = true; inputs.bar.style.setProperty('--p','0%');
+  inputs.deltaUnder.hidden = true; inputs.deltaOk.hidden = true;
+  inputs.barFill.style.setProperty('--w','0%');
+  inputs.barFill.style.background = '#000';
   // close modal if open
   modal.backdrop.style.display='none';
 }
 
-el('resetBtn').addEventListener('click', resetForm);
-
 // Open/close modal
+el('resetBtn').addEventListener('click', resetForm);
 inputs.openCalc.addEventListener('click', () => {
-  // start BLANK — do NOT mirror main form values
+  // start BLANK — sandbox does not mirror main form values
   modal.mWeight.value = '';
   modal.mDose.value = '';
   modal.maxVialText.textContent = `Max vial option: ${state.cap}`;
@@ -456,14 +462,17 @@ inputs.pill100.addEventListener('click', ()=>{
   inputs.v70.value = 0;
   refreshDeltaStrip();
 });
-// Mixed best: now APPLY both a/b
+// Mixed best: confirm then APPLY both a/b
 inputs.pillMixed.addEventListener('click', ()=>{
   if(state.bestMix && (state.bestMix.a>0 || state.bestMix.b>0)){
-    inputs.v70.value = state.bestMix.a;
-    inputs.v100.value = state.bestMix.b;
-    refreshDeltaStrip();
+    const label = `Apply ${state.bestMix.a}×70 & ${state.bestMix.b}×100 to the form? This only fills the fields.`;
+    const ok = confirm(label);
+    if(ok){
+      inputs.v70.value = state.bestMix.a;
+      inputs.v100.value = state.bestMix.b;
+      refreshDeltaStrip();
+    }
   } else {
-    // tiny visual nudge
     inputs.pillMixed.setAttribute('aria-pressed','true');
     setTimeout(()=>inputs.pillMixed.setAttribute('aria-pressed','false'), 400);
   }
@@ -497,10 +506,10 @@ function refreshMain(){
     inputs.exactDose.textContent = fmt2(state.exact);
     if(best && best.total>0){
       inputs.mixLine.textContent = `${best.a}×70 mg + ${best.b}×100 mg (Total ${fmt0(best.total)} mg · Waste ${fmt0(best.waste)} mg / ${pct2(best.wastePct)}%)`;
-      inputs.pillMixed.textContent = `Mixed best ×${best.a}/×${best.b}`;
+      inputs.pillMixed.textContent = `Mixed best: ${best.a}×70 + ${best.b}×100 → Total ${fmt0(best.total)} mg, Waste ${fmt0(best.waste)} mg (${pct2(best.wastePct)}%)`;
     }else{
       inputs.mixLine.textContent = '—';
-      inputs.pillMixed.textContent = 'Mixed best ×a/×b';
+      inputs.pillMixed.textContent = 'Mixed best: —';
     }
 
     const singles = bestSingles(state.exact, state.cap);
@@ -512,7 +521,7 @@ function refreshMain(){
     inputs.mixLine.textContent = '—';
     inputs.pill70.textContent = '70-only ×0'; delete inputs.pill70.dataset.n;
     inputs.pill100.textContent = '100-only ×0'; delete inputs.pill100.dataset.n;
-    inputs.pillMixed.textContent = 'Mixed best ×a/×b';
+    inputs.pillMixed.textContent = 'Mixed best: —';
   }
 
   refreshDeltaStrip();
@@ -536,8 +545,21 @@ function refreshDeltaStrip(){
     inputs.deltaOk.hidden = false;
     inputs.deltaOk.innerHTML = `Total ordered: ${fmt0(total)} mg · Waste: ${fmt0(waste)} mg (${pct2(wastePct)}%)`;
   }
-  const p = required>0 ? Math.min(100, (total/required)*100) : 0;
-  inputs.bar.style.setProperty('--p', p.toFixed(1)+'%');
+
+  // New bar fill & color logic
+  const fillPct = required>0 ? Math.min(100, (total/required)*100) : 0;
+  let barColor = '#000'; // black when under
+  if(total >= required && total > 0){
+    const waste = Math.max(0, total - exact);
+    const wastePct = total>0 ? (waste/total*100) : 0;
+    if (wastePct <= 25) barColor = '#1f7a39';      // green
+    else if (wastePct <= 50) barColor = '#b55b00'; // yellow
+    else barColor = '#b00020';                     // red
+  } else {
+    barColor = '#000';
+  }
+  inputs.barFill.style.setProperty('--w', fillPct.toFixed(1)+'%');
+  inputs.barFill.style.background = barColor;
 }
 
 /* ---------------------------------------------

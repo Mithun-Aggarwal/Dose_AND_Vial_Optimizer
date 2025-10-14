@@ -74,6 +74,12 @@
     font-size:.9rem;color:var(--muted);margin-top:6px;
     display:inline-block;white-space:nowrap;margin-bottom:0;text-overflow:ellipsis;overflow:hidden;
   }
+  .calc-link{
+    margin-left:6px;color:var(--brand);font-weight:600;text-decoration:underline;
+  }
+  .calc-link:focus,.calc-link:hover{
+    color:var(--brand-600);
+  }
 
   /* Modal */
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);align-items:center;justify-content:center;padding:20px;z-index:1000}
@@ -424,7 +430,7 @@ function refreshMain(){
   if(ok){
     inputs.calcHint.hidden=false;
     // UPDATED to be more formal and compliant
-    inputs.calcHint.innerHTML = `TGA recommended dose: ${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b>`;
+    inputs.calcHint.innerHTML = `TGA recommended dose: ${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b> <a class="calc-link" href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd" target="_blank" rel="noopener">View TGA guidance</a>`;
   } else {
     inputs.calcHint.hidden=true;
   }

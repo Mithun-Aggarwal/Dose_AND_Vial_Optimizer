@@ -53,6 +53,15 @@
   .pill-green{background:#e8f5ec;border-color:var(--green);color:var(--green)}
   .pill-amber{background:#fff3e0;border-color:var(--amber);color:var(--amber)}
   .pill-red{background:#ffebee;border-color:var(--red);color:var(--red)}
+  .text-positive{color:var(--green);font-weight:700}
+  .text-negative{color:var(--red);font-weight:700}
+  .choice-banner{background:var(--brand-050);color:#5A3100;font-weight:800;text-transform:uppercase;padding:12px 16px;border-radius:12px;text-align:center;margin-bottom:18px;letter-spacing:.5px}
+  .choice-section{margin-bottom:18px}
+  .choice-section h3{margin:0 0 8px;font-size:1.05rem;font-weight:800}
+  .choice-section p{margin:4px 0;font-size:.95rem;color:#333}
+  .choice-section p .mono{font-size:1rem}
+  .choice-close-wrap{display:flex;justify-content:center;margin-top:6px}
+  .centered-action{display:flex;justify-content:center;margin:0 auto}
 
   /* Meter */
   .dosebar-wrap{margin-top:6px}
@@ -295,27 +304,26 @@
 <div id="choiceBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="modal" style="max-width:720px">
     <div class="modal-bd">
-      <div class="inline-summary"><div class="label">You are about to select this option</div></div>
-      <div class="divider"></div>
-      <div class="inline-summary">
-        <div class="label">Dose regimen</div>
-        <div id="doseLine" class="mono" style="margin-top:4px"></div>
-        <div id="exactLine" class="mono" style="margin-top:2px"></div>
-      </div>
-      <div class="divider"></div>
-      <div class="inline-summary">
-        <div class="label">About to select</div>
-        <div id="suggestSplit" class="mono" style="margin-top:4px"></div>
-        <div id="suggestWaste" class="mono" style="margin-top:2px"></div>
-        <div id="suggestStatus" class="mono" style="margin-top:2px;color:#444"></div>
-      </div>
+      <div class="choice-banner">READ CAREFULLY: YOU ARE ABOUT TO SELECT</div>
+      <section class="choice-section" aria-labelledby="choiceTitle">
+        <h3 id="choiceTitle">How the dose is calculated</h3>
+        <p>Patient weight: <span id="choiceWeight" class="mono">0.00</span> kg</p>
+        <p>Selected regimen: <span id="choiceSelectedDose" class="text-positive">—</span></p>
+        <p>Alternative regimen: <span id="choiceAltDose" class="text-negative">—</span></p>
+        <p>Calculation: <span id="choiceCalcResult" class="mono">0.00 mg</span></p>
+      </section>
+      <section class="choice-section">
+        <h3>Vial composition to avoid wastage</h3>
+        <p id="choiceVialSummary" class="mono">—</p>
+        <p id="choiceVialDetail" class="mono" style="color:#444">—</p>
+      </section>
     </div>
     <div class="modal-ft">
       <a href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd"
-         class="btn brand block" target="_blank" rel="noopener" aria-label="Open TGA guidance">Open TGA guidance</a>
+         class="btn brand centered-action" target="_blank" rel="noopener" aria-label="Open TGA guidance">Open TGA guidance</a>
       <button class="btn ghost block" id="choiceApply" disabled title="Advisory mode — Apply to form is disabled">Apply to form (disabled)</button>
       <div class="muted" style="text-align:center">You remain responsible for clinical decisions. Verify with PI.</div>
-      <div style="display:flex;justify-content:center;margin-top:6px">
+      <div class="choice-close-wrap">
         <button class="icon-btn" id="choiceClose" aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
           <span>Close</span>
@@ -368,8 +376,9 @@ const modal = {
   results: document.querySelector('#results tbody'), maxVialText: el('maxVialText'), apply: el('apply')
 };
 const choice = {
-  backdrop: el('choiceBackdrop'), doseLine: el('doseLine'), exactLine: el('exactLine'),
-  suggestSplit: el('suggestSplit'), suggestWaste: el('suggestWaste'), suggestStatus: el('suggestStatus'),
+  backdrop: el('choiceBackdrop'),
+  weight: el('choiceWeight'), selectedDose: el('choiceSelectedDose'), altDose: el('choiceAltDose'),
+  calcResult: el('choiceCalcResult'), vialSummary: el('choiceVialSummary'), vialDetail: el('choiceVialDetail'),
   apply: el('choiceApply'), close: el('choiceClose')
 };
 const state = { weight:0, dose:0, E:0, cap:10 };
@@ -488,17 +497,29 @@ function updateDoseBar(){
 
 /* ===== Suggestion popup ===== */
 function openSuggestionPopup(a,b,label){
-  const E=state.E; const T=a*70+b*100;
-  choice.doseLine.textContent=`Dose: ${fmt2(state.dose)} mg/kg · Weight: ${fmt2(state.weight)} kg`;
-  choice.exactLine.textContent=`Exact required: ${fmt2(E)} mg`;
-  choice.suggestSplit.textContent=`${label}: ${compText(a,b)} = ${fmt0(T)} mg`;
+  const E=state.E;
+  const T=a*70+b*100;
+  const selectedDose = state.dose>0 ? fmt2(state.dose) : '0.00';
+  const altDose = state.dose===2.5 ? 1.9 : state.dose===1.9 ? 2.5 : null;
+
+  choice.weight.textContent = fmt2(state.weight);
+  choice.selectedDose.textContent = state.dose>0 ? `${selectedDose} mg/kg regimen` : 'No regimen selected';
+  choice.altDose.textContent = altDose!==null ? `${fmt2(altDose)} mg/kg regimen` : 'No alternate regimen recorded';
+  choice.calcResult.textContent = `${selectedDose} mg/kg × ${fmt2(state.weight)} kg = ${fmt2(E)} mg`;
+
+  const compositionText = compText(a,b);
+  choice.vialSummary.textContent = `${label}: ${compositionText} = ${fmt0(T)} mg`;
+
   if(T + EPS < E){
-    const underBy=E-T; choice.suggestWaste.textContent=`Under by: ${fmt2(underBy)} mg`; choice.suggestStatus.textContent='Status: UNDER TARGET';
-  }else{
-    const W=T-E; const Wpct=T>0?(W/T*100):0;
-    choice.suggestWaste.textContent=`Waste: ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
-    choice.suggestStatus.textContent=`Status: ${wasteBandLabel(Wpct)}`;
+    const underBy = E - T;
+    choice.vialDetail.textContent = `Delivers ${fmt0(T)} mg total — still ${fmt2(underBy)} mg short of the ${fmt2(E)} mg exact dose.`;
+  } else {
+    const overBy = T - E;
+    const overPct = T>0 ? (overBy/T*100) : 0;
+    const band = wasteBandLabel(overPct);
+    choice.vialDetail.textContent = `Delivers ${fmt0(T)} mg total — ${fmt2(overBy)} mg (${overPct.toFixed(2)}%) above the ${fmt2(E)} mg exact dose (${band}).`;
   }
+
   choice.backdrop.style.display='flex';
 }
 choice.backdrop.addEventListener('click',(e)=>{ if(e.target===choice.backdrop) choice.backdrop.style.display='none'; });

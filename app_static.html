@@ -562,10 +562,11 @@ function updateDoseBar(){
   inputs.doseBarFill.style.width=`${fillPct.toFixed(1)}%`;
   inputs.doseBarMarker.style.left=`${markerPct.toFixed(1)}%`;
   inputs.doseBarMarkerLabel.style.left=`${markerPct.toFixed(1)}%`;
+  inputs.doseBarMarkerLabel.textContent = `Exact dose ${fmt2(E)} mg`;
 
   if(T + EPS < E){
     inputs.doseBarFill.style.background=getComputedStyle(document.documentElement).getPropertyValue('--under').trim()||'#222';
-    inputs.doseBarStats.textContent=`Under by ${fmt2(E-T)} mg`;
+    inputs.doseBarStats.textContent=`TGA recommended dose = ${fmt2(E)} mg • Under by ${fmt2(E-T)} mg`;
     setDoseBarKey('dot-under','Under target');
   }else{
     const W=T-E; const Wpct=T>0?(W/T*100):0;
@@ -576,7 +577,7 @@ function updateDoseBar(){
     if(Wpct>50){ dotClass='dot-red'; label='High (>50%)'; }
     else if(Wpct>25){ color=getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()||'#b55b00'; dotClass='dot-amber'; label='Moderate (25–50%)'; }
     inputs.doseBarFill.style.background=color;
-    inputs.doseBarStats.textContent=`Total ${fmt0(T)} mg • Waste ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
+    inputs.doseBarStats.textContent=`TGA recommended dose = ${fmt2(E)} mg • Total ${fmt0(T)} mg • Waste ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
     setDoseBarKey(dotClass,label);
   }
   inputs.doseBarWrap.hidden=false;

@@ -81,10 +81,14 @@
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--shadow)}
 
   .calc-hint{
-    font-size:.95rem;margin-top:8px;padding:10px 14px;border-radius:12px;
-    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:.95rem;margin-top:12px;padding:10px 14px;border-radius:12px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     background:var(--brand-050);color:#5A3100;border:1px solid #FFDCC4;font-weight:600;
   }
+  .calc-hint-content{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1 1 240px;
+  }
+  .calc-hint-text{flex:1 1 auto;min-width:160px;}
   .calc-hint-label{font-weight:800}
   .calc-link{
     color:var(--brand);font-weight:600;text-decoration:underline;
@@ -139,7 +143,6 @@
           <input id="weight" type="number" min="0" step="0.1" placeholder="e.g., 91.3" aria-label="Patient weight in kilograms"/>
           <span class="unit">kg</span>
         </div>
-        <div id="calcHint" class="calc-hint" hidden></div>
       </div>
       <div class="field">
         <div class="label">Confirm patient’s treatment dose <span class="muted">*</span></div>
@@ -150,6 +153,8 @@
         </select>
       </div>
     </div>
+
+    <div id="calcHint" class="calc-hint" hidden></div>
 
     <div class="divider"></div>
 
@@ -508,8 +513,10 @@ function refreshMain(){
     inputs.calcHint.hidden=false;
     // UPDATED to be more formal and compliant
     inputs.calcHint.innerHTML = `
-      <span class="calc-hint-label">TGA recommended dose:</span>
-      <span>${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b></span>
+      <div class="calc-hint-content">
+        <span class="calc-hint-label">TGA recommended dose:</span>
+        <span class="calc-hint-text">${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b></span>
+      </div>
       <a class="calc-link" href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd" target="_blank" rel="noopener">View TGA guidance</a>
     `.trim();
   } else {

@@ -98,8 +98,8 @@
     .fill-yellow{background:linear-gradient(90deg, #facc15, #eab308)}
     .fill-red{background:linear-gradient(90deg, #f43f5e, #ef4444)}
 
-    .marker{position:absolute; top:-6px; bottom:-6px; width:2px; background:var(--maroon-500); left:calc(100% - 2px)}
-    .marker-label{position:absolute; top:-26px; right:0; font-size:12px; color:var(--maroon-600); font-weight:700}
+    .marker{position:absolute; top:-6px; bottom:-6px; width:2px; background:var(--maroon-500); left:calc(75% - 1px)}
+    .marker-label{position:absolute; top:-26px; left:75%; transform:translateX(-50%); font-size:12px; color:var(--maroon-600); font-weight:700}
 
     .meter-info{margin-top:8px; font-weight:600}
     .meter-under{color:var(--warning); font-weight:600; margin-top:6px; display:none}
@@ -449,9 +449,18 @@
       markerLabel.textContent = 'Exact ' + fmt2(exact) + ' mg';
       tgaLine.textContent = 'TGA recommended dose: Weight: ' + fmt2(w) + ' kg × Dose: ' + fmt2(d) + ' mg/kg = ' + fmt2(exact) + ' mg';
 
-      // Fill is relative to exact (target marker at 100%); cap to 140% width.
-      const ratio = Math.min((exact>0 ? total/exact : 0), 1.4);
-      fillEl.style.width = (Math.max(0, ratio)*100)+'%';
+      // Fill is relative to exact; map 100% of the dose to ~75% of the bar and
+      // use the remaining 25% to represent overfill (clamped to the container width).
+      const ratio = exact>0 ? total/exact : 0;
+      const safeRatio = Math.max(0, ratio);
+      let fillPct;
+      if(safeRatio <= 1){
+        fillPct = safeRatio * 75;
+      }else{
+        const overRatio = Math.min(safeRatio - 1, 1);
+        fillPct = 75 + (overRatio * 25);
+      }
+      fillEl.style.width = fillPct + '%';
       const delta = +(total - exact).toFixed(2);
 
       underEl.style.display='none';

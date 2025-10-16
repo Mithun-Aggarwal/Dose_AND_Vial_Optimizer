@@ -295,7 +295,7 @@
       </div>
     </div>
     <div class="modal-ft">
-      <button class="btn brand block" id="apply" disabled title="Advisory mode — Apply to form is disabled">Apply to form (disabled)</button>
+      <button class="btn brand block" id="apply" title="Apply the suggested vial plan to the form">Apply to form</button>
       <div class="muted" style="text-align:center">Use this as a calculator; enter your final decision on the form.</div>
     </div>
   </div>
@@ -321,7 +321,7 @@
     <div class="modal-ft">
       <a href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd"
          class="btn brand centered-action" target="_blank" rel="noopener" aria-label="Open TGA guidance">Open TGA guidance</a>
-      <button class="btn ghost block" id="choiceApply" disabled title="Advisory mode — Apply to form is disabled">Apply to form (disabled)</button>
+      <button class="btn ghost block" id="choiceApply" title="Copy this vial plan to the form">Apply to form</button>
       <div class="muted" style="text-align:center">You remain responsible for clinical decisions. Verify with PI.</div>
       <div class="choice-close-wrap">
         <button class="icon-btn" id="choiceClose" aria-label="Close">
@@ -375,13 +375,24 @@ const modal = {
   mCalcLine: el('mCalcLine'), mExact: el('mExact'),
   results: document.querySelector('#results tbody'), maxVialText: el('maxVialText'), apply: el('apply')
 };
+modal.currentPlan = null;
+modal.apply.disabled = true;
 const choice = {
   backdrop: el('choiceBackdrop'),
   weight: el('choiceWeight'), selectedDose: el('choiceSelectedDose'), altDose: el('choiceAltDose'),
   calcResult: el('choiceCalcResult'), vialSummary: el('choiceVialSummary'), vialDetail: el('choiceVialDetail'),
   apply: el('choiceApply'), close: el('choiceClose')
 };
+choice.currentPlan = null;
+choice.apply.disabled = true;
 const state = { weight:0, dose:0, E:0, cap:10 };
+
+function applyPlanToForm(plan){
+  if(!plan) return;
+  inputs.v70.value = plan.a;
+  inputs.v100.value = plan.b;
+  updateDoseBar();
+}
 
 /* ===== Init/Reset ===== */
 function resetForm(){
@@ -390,14 +401,24 @@ function resetForm(){
   inputs.calcHint.hidden = true;
   inputs.doseBarWrap.hidden=true; inputs.suggestionsRow.hidden=true; inputs.suggestionsRow.innerHTML='';
   modal.mWeight.value=''; modal.mDose.value=''; modal.maxVialText.textContent=`Max vial option: ${state.cap}`;
+  modal.currentPlan = null;
+  modal.apply.disabled = true;
+  choice.currentPlan = null;
+  choice.apply.disabled = true;
   refreshModal();
 }
 inputs.resetBtn.addEventListener('click', resetForm);
 
 /* ===== Calculator modal ===== */
 inputs.openCalc.addEventListener('click', ()=>{ refreshModal(); modal.backdrop.style.display='flex'; });
-modal.close.addEventListener('click', ()=> modal.backdrop.style.display='none');
-modal.backdrop.addEventListener('click',(e)=>{ if(e.target===modal.backdrop) modal.backdrop.style.display='none'; });
+modal.close.addEventListener('click', ()=>{ modal.backdrop.style.display='none'; modal.currentPlan=null; modal.apply.disabled=true; });
+modal.backdrop.addEventListener('click',(e)=>{
+  if(e.target===modal.backdrop){
+    modal.backdrop.style.display='none';
+    modal.currentPlan=null;
+    modal.apply.disabled=true;
+  }
+});
 ['input','change'].forEach(evt=>{
   modal.mWeight.addEventListener(evt, refreshModal);
   modal.mDose.addEventListener(evt, refreshModal);
@@ -407,6 +428,8 @@ function refreshModal(){
   modal.mCalcLine.textContent = ok? `Calculation: ${fmt2(d)} mg/kg × ${fmt2(w)} kg = ${fmt2(E)} mg` : 'Set weight and dose to view options.';
   modal.mExact.textContent = fmt2(E);
   modal.results.innerHTML='';
+  modal.currentPlan = null;
+  modal.apply.disabled = true;
   if(ok){
     const options=enumerateValidPlans(E,state.cap).slice(0,3);
     options.forEach((o,idx)=>{
@@ -419,8 +442,11 @@ function refreshModal(){
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.wastePct.toFixed(2)}%</td>`;
       modal.results.appendChild(tr);
     });
+    if(options.length){
+      modal.currentPlan = { a: options[0].a, b: options[0].b };
+      modal.apply.disabled = false;
+    }
   }
-  modal.apply.disabled=true;
 }
 
 /* ===== Main refresh ===== */
@@ -520,10 +546,38 @@ function openSuggestionPopup(a,b,label){
     choice.vialDetail.textContent = `Delivers ${fmt0(T)} mg total — ${fmt2(overBy)} mg (${overPct.toFixed(2)}%) above the ${fmt2(E)} mg exact dose (${band}).`;
   }
 
+  choice.currentPlan = { a, b };
+  choice.apply.disabled = false;
   choice.backdrop.style.display='flex';
 }
-choice.backdrop.addEventListener('click',(e)=>{ if(e.target===choice.backdrop) choice.backdrop.style.display='none'; });
-choice.close.addEventListener('click',()=> choice.backdrop.style.display='none');
+choice.backdrop.addEventListener('click',(e)=>{
+  if(e.target===choice.backdrop){
+    choice.backdrop.style.display='none';
+    choice.currentPlan=null;
+    choice.apply.disabled=true;
+  }
+});
+choice.close.addEventListener('click',()=>{
+  choice.backdrop.style.display='none';
+  choice.currentPlan=null;
+  choice.apply.disabled=true;
+});
+
+modal.apply.addEventListener('click', ()=>{
+  if(!modal.currentPlan) return;
+  applyPlanToForm(modal.currentPlan);
+  modal.backdrop.style.display='none';
+  modal.currentPlan=null;
+  modal.apply.disabled=true;
+});
+
+choice.apply.addEventListener('click', ()=>{
+  if(!choice.currentPlan) return;
+  applyPlanToForm(choice.currentPlan);
+  choice.backdrop.style.display='none';
+  choice.currentPlan=null;
+  choice.apply.disabled=true;
+});
 
 /* Boot */
 document.addEventListener('DOMContentLoaded', resetForm);

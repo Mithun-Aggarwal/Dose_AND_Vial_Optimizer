@@ -201,7 +201,8 @@
       <div>
         <label for="dose">Confirm patient’s treatment dose*</label>
         <select id="dose" class="input">
-          <option value="2.5" selected>2.50 mg/kg</option>
+          <option value="" selected>Select dose</option>
+          <option value="2.5">2.50 mg/kg</option>
           <option value="1.9">1.90 mg/kg</option>
         </select>
       </div>
@@ -398,6 +399,8 @@
       const a = parseInt(v70El.value||0,10);
       const b = parseInt(v100El.value||0,10);
       const total = a*70 + b*100;
+      const w = parseFloat(weightEl.value||0);
+      const d = parseFloat(doseEl.value||0);
 
       if(!haveInputs()){
         fillEl.style.width = '0%';
@@ -414,7 +417,7 @@
       // Show the meter section
       meterWrap.style.display='block';
       markerLabel.textContent = 'Exact ' + fmt2(exact) + ' mg';
-      tgaLine.textContent = 'TGA recommended dose: ' + fmt2(exact) + ' mg';
+      tgaLine.textContent = 'TGA recommended dose: Weight: ' + fmt2(w) + ' kg × Dose: ' + fmt2(d) + ' mg/kg = ' + fmt2(exact) + ' mg';
 
       // Fill is relative to exact (target marker at 100%); cap to 140% width.
       const ratio = Math.min((exact>0 ? total/exact : 0), 1.4);
@@ -595,7 +598,7 @@
     [v70El, v100El].forEach(el=>el.addEventListener('input', updateBar));
 
     $('#resetBtn').addEventListener('click', ()=>{
-      weightEl.value=''; doseEl.value='2.5'; v70El.value='0'; v100El.value='0'; exact=0;
+      weightEl.value=''; doseEl.value=''; v70El.value='0'; v100El.value='0'; exact=0;
       calcExact(); updateBar();
     });
 

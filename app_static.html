@@ -64,27 +64,30 @@
   .centered-action{display:flex;justify-content:center;margin:0 auto}
 
   /* Meter */
-  .dosebar-wrap{margin-top:6px}
-  .dosebar-label{font-size:.95rem;color:#333;margin-bottom:6px;font-weight:700}
+  .dosebar-wrap{margin-top:12px}
+  .dosebar-label{font-size:.95rem;color:#333;margin-bottom:8px;font-weight:700}
   .bar{height:12px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
   .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--under);transition:width .2s ease, background-color .2s ease}
   .marker{position:absolute;top:-5px;bottom:-5px;width:2px;background:#111;opacity:.9}
   .marker-label{position:absolute;top:-22px;transform:translateX(-50%);font-size:.8rem;color:#111;font-weight:800;white-space:nowrap}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.85rem;color:#444}
-  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  .dosebar-text{font-size:.95rem;margin-top:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:#222}
+  .dosebar-stats{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600}
+  .status-key{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:#444;font-weight:600}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%}
   .dot-green{background:var(--green)} .dot-amber{background:var(--amber)} .dot-red{background:var(--red)} .dot-under{background:var(--under)}
-  .dosebar-text{font-size:.95rem;margin-top:6px}
 
   .actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media (max-width:860px){.actions-grid{grid-template-columns:1fr}}
   .cardlet{border:1px solid var(--border);background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--shadow)}
 
   .calc-hint{
-    font-size:.9rem;color:var(--muted);margin-top:6px;
-    display:inline-block;white-space:nowrap;margin-bottom:0;text-overflow:ellipsis;overflow:hidden;
+    font-size:.95rem;margin-top:8px;padding:10px 14px;border-radius:12px;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    background:var(--brand-050);color:#5A3100;border:1px solid #FFDCC4;font-weight:600;
   }
+  .calc-hint-label{font-weight:800}
   .calc-link{
-    margin-left:6px;color:var(--brand);font-weight:600;text-decoration:underline;
+    color:var(--brand);font-weight:600;text-decoration:underline;
   }
   .calc-link:focus,.calc-link:hover{
     color:var(--brand-600);
@@ -158,23 +161,20 @@
       </div>
     </div>
 
+    <div id="suggestionsRow" class="center" hidden style="margin-top:10px"></div>
+
     <div id="doseBarWrap" class="dosebar-wrap" hidden>
-      <div class="dosebar-label">Suggested vial composition &amp; waste meter (experimental)</div>
+      <div class="dosebar-label">Dose &amp; order meter (exp)</div>
       <div class="bar" id="doseBar">
         <div id="doseBarFill" class="bar-fill"></div>
         <div id="doseBarMarker" class="marker" style="left:0%"></div>
         <div id="doseBarMarkerLabel" class="marker-label">Exact dose</div>
       </div>
-      <div id="doseBarText" class="dosebar-text mono"></div>
-      <div class="legend">
-        <span><span class="dot dot-green"></span>Low waste (≤25%)</span>
-        <span><span class="dot dot-amber"></span>Moderate (25–50%)</span>
-        <span><span class="dot dot-red"></span>High (>50%)</span>
-        <span><span class="dot dot-under"></span>Under target</span>
+      <div id="doseBarText" class="dosebar-text">
+        <span id="doseBarStats" class="dosebar-stats"></span>
+        <span id="doseBarKey" class="status-key" hidden></span>
       </div>
     </div>
-
-    <div id="suggestionsRow" class="center" hidden style="margin-top:10px"></div>
 
     <div class="divider"></div>
 
@@ -357,7 +357,6 @@ function enumerateValidPlans(E, cap=10){
   return out;
 }
 function singlesThatMeet(E, cap=10){ return { n70:Math.min(Math.ceil(E/70),cap), n100:Math.min(Math.ceil(E/100),cap) }; }
-function wasteBandLabel(pct){ if(pct<=25) return 'Low waste'; if(pct<=50) return 'Moderate waste'; return 'High waste'; }
 function compText(a,b){
   const p=[];
   if(a>0) p.push(`70mg × ${a}`);
@@ -371,6 +370,7 @@ const inputs = {
   calcHint: el('calcHint'),
   doseBarWrap: el('doseBarWrap'), doseBarFill: el('doseBarFill'),
   doseBarMarker: el('doseBarMarker'), doseBarMarkerLabel: el('doseBarMarkerLabel'), doseBarText: el('doseBarText'),
+  doseBarStats: el('doseBarStats'), doseBarKey: el('doseBarKey'),
   suggestionsRow: el('suggestionsRow'),
   openCalc: el('openCalc'), resetBtn: el('resetBtn')
 };
@@ -470,7 +470,11 @@ function refreshMain(){
   if(ok){
     inputs.calcHint.hidden=false;
     // UPDATED to be more formal and compliant
-    inputs.calcHint.innerHTML = `TGA recommended dose: ${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b> <a class="calc-link" href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd" target="_blank" rel="noopener">View TGA guidance</a>`;
+    inputs.calcHint.innerHTML = `
+      <span class="calc-hint-label">TGA recommended dose:</span>
+      <span>${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b></span>
+      <a class="calc-link" href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd" target="_blank" rel="noopener">View TGA guidance</a>
+    `.trim();
   } else {
     inputs.calcHint.hidden=true;
   }
@@ -503,8 +507,17 @@ function refreshMain(){
 }
 
 /* ===== Meter ===== */
+function setDoseBarKey(dotClass,label){
+  if(dotClass && label){
+    inputs.doseBarKey.innerHTML = `<span class="dot ${dotClass}"></span><span>${label}</span>`;
+    inputs.doseBarKey.hidden = false;
+  } else {
+    inputs.doseBarKey.innerHTML = '';
+    inputs.doseBarKey.hidden = true;
+  }
+}
 function updateDoseBar(){
-  const E=state.E; if(!(E>0)){ inputs.doseBarWrap.hidden=true; return; }
+  const E=state.E; if(!(E>0)){ inputs.doseBarWrap.hidden=true; inputs.doseBarStats.textContent=''; setDoseBarKey(); return; }
   const a=Number(inputs.v70.value||0), b=Number(inputs.v100.value||0); const T=a*70+b*100;
   let scaleMax=Math.max(E,T,1)*1.2;
   const fillPct=Math.min(100,Math.max(0,(T/scaleMax)*100));
@@ -515,14 +528,19 @@ function updateDoseBar(){
 
   if(T + EPS < E){
     inputs.doseBarFill.style.background=getComputedStyle(document.documentElement).getPropertyValue('--under').trim()||'#222';
-    inputs.doseBarText.textContent=`Under by ${fmt2(E-T)} mg`;
+    inputs.doseBarStats.textContent=`Under by ${fmt2(E-T)} mg`;
+    setDoseBarKey('dot-under','Under target');
   }else{
     const W=T-E; const Wpct=T>0?(W/T*100):0;
     let color=getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#1f7a39';
+    let dotClass='dot-green';
+    let label='Low waste (≤25%)';
     if(Wpct>50) color=getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#b00020';
-    else if(Wpct>25) color=getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()||'#b55b00';
+    if(Wpct>50){ dotClass='dot-red'; label='High (>50%)'; }
+    else if(Wpct>25){ color=getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()||'#b55b00'; dotClass='dot-amber'; label='Moderate (25–50%)'; }
     inputs.doseBarFill.style.background=color;
-    inputs.doseBarText.textContent=`Total ${fmt0(T)} mg • Waste ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
+    inputs.doseBarStats.textContent=`Total ${fmt0(T)} mg • Waste ${fmt2(W)} mg (${Wpct.toFixed(2)}%)`;
+    setDoseBarKey(dotClass,label);
   }
   inputs.doseBarWrap.hidden=false;
 }

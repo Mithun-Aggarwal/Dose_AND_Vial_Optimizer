@@ -99,6 +99,9 @@
   .modal-hd{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--border)}
   .modal-bd{padding:14px 16px;max-height:70vh;overflow:auto}
   .modal-ft{display:flex;flex-direction:column;gap:10px;padding:12px 16px;border-top:1px solid var(--border)}
+  .option-row{cursor:pointer;transition:background-color .12s ease}
+  .option-row:hover{background:#f4f4f4}
+  .option-row.selected{background:var(--brand-050)}
   [hidden]{display:none !important}
 </style>
 </head>
@@ -235,10 +238,7 @@
 <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <div class="modal-hd">
-      <div>
-        <div id="modalTitle" class="label">Dose & Vial Optimizer</div>
-        <div class="muted">Advisory sandbox — does not change the form</div>
-      </div>
+      <div id="modalTitle" class="label">Dose &amp; Vial Calculator</div>
       <button class="icon-btn" id="closeModal" aria-label="Close">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
@@ -321,6 +321,7 @@
     <div class="modal-ft">
       <a href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd"
          class="btn brand block" target="_blank" rel="noopener" aria-label="Open TGA guidance">Open TGA guidance</a>
+      <a href="#weight" class="btn secondary block" aria-label="Return to the form fields">Return to form fields</a>
       <button class="btn ghost block" id="choiceApply" title="Apply Vial composition to the form" aria-label="Apply Vial composition to the form">Apply Vial composition to the form</button>
       <div class="muted" style="text-align:center">You remain responsible for clinical decisions. Verify with PI.</div>
       <div class="choice-close-wrap">
@@ -384,6 +385,7 @@ modal.currentPlan = null;
 modal.apply.disabled = true;
 const choice = {
   backdrop: el('choiceBackdrop'),
+  title: el('choiceTitle'),
   weight: el('choiceWeight'), selectedDose: el('choiceSelectedDose'),
   calcResult: el('choiceCalcResult'), vialSummary: el('choiceVialSummary'),
   vialDetail: el('choiceVialDetail'), wasteNotice: el('choiceWasteNotice'),
@@ -392,6 +394,7 @@ const choice = {
 choice.currentPlan = null;
 choice.apply.disabled = true;
 const state = { weight:0, dose:0, E:0, cap:10 };
+const DEFAULT_CHOICE_TITLE = 'Dose Calculation based on the Weight & Dose you have selected.';
 
 function applyPlanToForm(plan){
   if(!plan) return;
@@ -439,18 +442,53 @@ function refreshModal(){
   if(ok){
     const options=enumerateValidPlans(E,state.cap).slice(0,3);
     options.forEach((o,idx)=>{
-      const tr=document.createElement('tr'); if(idx===0) tr.style.background='#faf7f8';
+      const label = idx===0 ? `Option ${idx+1} (Least waste)` : `Option ${idx+1}`;
+      const plan = {
+        a: o.a,
+        b: o.b,
+        total: o.total,
+        waste: o.waste,
+        wastePct: o.wastePct,
+        weight: w,
+        dose: d,
+        exact: E,
+        summaryPrefix: label
+      };
+      const tr=document.createElement('tr');
+      tr.className='option-row';
+      tr.setAttribute('tabindex','0');
+      tr.setAttribute('role','button');
+      tr.setAttribute('aria-selected','false');
+      tr.setAttribute('aria-label', `${label}: ${compText(o.a,o.b)}. Total ${fmt0(o.total)} mg. Waste ${fmt2(o.waste)} mg (${o.wastePct.toFixed(2)}%).`);
       tr.innerHTML=`
-        <td style="border:1px solid var(--border);padding:8px 10px">Option ${idx+1}${idx===0?' (Least waste)':''}</td>
+        <td style="border:1px solid var(--border);padding:8px 10px">${label}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${compText(o.a,o.b)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt0(o.total)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${fmt2(o.waste)}</td>
         <td style="border:1px solid var(--border);padding:8px 10px;text-align:right">${o.wastePct.toFixed(2)}%</td>`;
+      const selectPlan = ()=>{
+        Array.from(modal.results.children).forEach(row=>{
+          row.classList.remove('selected');
+          row.setAttribute('aria-selected','false');
+        });
+        tr.classList.add('selected');
+        tr.setAttribute('aria-selected','true');
+        modal.currentPlan = plan;
+        modal.apply.disabled = false;
+      };
+      tr.addEventListener('click', selectPlan);
+      tr.addEventListener('keydown',(evt)=>{
+        if(evt.key==='Enter' || evt.key===' '){
+          evt.preventDefault();
+          selectPlan();
+        }
+      });
       modal.results.appendChild(tr);
+      if(idx===0) selectPlan();
     });
-    if(options.length){
-      modal.currentPlan = { a: options[0].a, b: options[0].b };
-      modal.apply.disabled = false;
+    if(!options.length){
+      modal.currentPlan = null;
+      modal.apply.disabled = true;
     }
   }
 }
@@ -493,7 +531,7 @@ function refreshMain(){
       const overPct = (overRatio*100).toFixed(2);
       btn.textContent = `Suggestion : ${compText(best.a,best.b)} = ${fmt0(best.total)} mg • ${overPct}% above exact`;
       btn.setAttribute('aria-label','Open suggested vial composition details');
-      btn.addEventListener('click',()=> openSuggestionPopup(best.a,best.b,'Suggested vial composition'));
+      btn.addEventListener('click',()=> openChoicePopup(best, { summaryPrefix:'Suggestion', heading:'Suggested Vial Composition', weight:state.weight, dose:state.dose, exact:state.E }));
       row.appendChild(btn);
       row.hidden=false;
     } else {
@@ -545,52 +583,64 @@ function updateDoseBar(){
   inputs.doseBarWrap.hidden=false;
 }
 
-/* ===== Suggestion popup ===== */
-function openSuggestionPopup(a,b,label){
-  const E=state.E;
-  const T=a*70+b*100;
-  const selectedDose = state.dose>0 ? fmt2(state.dose) : '0.00';
+/* ===== Confirmation popup ===== */
+function openChoicePopup(plan, meta={}){
+  if(!plan) return;
+  const weight = meta.weight ?? state.weight;
+  const dose = meta.dose ?? state.dose;
+  const doseDisplay = dose>0 ? fmt2(dose) : '0.00';
+  const exact = meta.exact ?? ((weight>0 && dose>0) ? exactDose(weight, dose) : 0);
+  const total = plan.total ?? (plan.a*70 + plan.b*100);
+  const waste = (typeof plan.waste === 'number') ? plan.waste : (total - exact);
+  const wastePct = (typeof plan.wastePct === 'number') ? plan.wastePct : (total>0 ? ((waste/total)*100) : 0);
 
-  choice.weight.textContent = fmt2(state.weight);
-  choice.selectedDose.textContent = state.dose>0 ? `${selectedDose} mg/kg regimen` : 'No regimen selected';
-  choice.calcResult.textContent = `${selectedDose} mg/kg × ${fmt2(state.weight)} kg = ${fmt2(E)} mg`;
+  choice.title.textContent = meta.heading || DEFAULT_CHOICE_TITLE;
+  choice.weight.textContent = fmt2(weight);
+  choice.selectedDose.textContent = dose>0 ? `${doseDisplay} mg/kg regimen` : 'No regimen selected';
+  choice.calcResult.textContent = `${doseDisplay} mg/kg × ${fmt2(weight)} kg = ${fmt2(exact)} mg`;
 
-  const compositionText = compText(a,b);
-  choice.vialSummary.textContent = `Suggestion : ${compositionText} = ${fmt0(T)} mg`;
-  choice.vialDetail.textContent = `Dose = ${fmt2(E)} mg; total order quantity is ${fmt0(T)} mg`;
-  choice.wasteNotice.textContent = 'Leftover product cannot be re-used per TGA guidelines.';
+  const compositionText = compText(plan.a, plan.b);
+  const summaryPrefix = meta.summaryPrefix || 'Suggestion';
+  choice.vialSummary.textContent = `${summaryPrefix} : ${compositionText} = ${fmt0(total)} mg`;
+  choice.vialDetail.textContent = `Dose = ${fmt2(exact)} mg • Waste ${fmt2(waste)} mg (${wastePct.toFixed(2)}%)`;
+  choice.wasteNotice.textContent = meta.wasteNotice || 'Leftover product cannot be re-used per TGA guidelines.';
 
-  choice.currentPlan = { a, b };
+  choice.currentPlan = { a: plan.a, b: plan.b };
   choice.apply.disabled = false;
   choice.backdrop.style.display='flex';
 }
-choice.backdrop.addEventListener('click',(e)=>{
-  if(e.target===choice.backdrop){
-    choice.backdrop.style.display='none';
-    choice.currentPlan=null;
-    choice.apply.disabled=true;
-  }
-});
-choice.close.addEventListener('click',()=>{
+function closeChoiceModal(){
   choice.backdrop.style.display='none';
   choice.currentPlan=null;
   choice.apply.disabled=true;
+  choice.title.textContent = DEFAULT_CHOICE_TITLE;
+}
+choice.backdrop.addEventListener('click',(e)=>{
+  if(e.target===choice.backdrop){
+    closeChoiceModal();
+  }
+});
+choice.close.addEventListener('click',()=>{
+  closeChoiceModal();
 });
 
 modal.apply.addEventListener('click', ()=>{
   if(!modal.currentPlan) return;
-  applyPlanToForm(modal.currentPlan);
   modal.backdrop.style.display='none';
-  modal.currentPlan=null;
-  modal.apply.disabled=true;
+  openChoicePopup(modal.currentPlan, {
+    summaryPrefix: modal.currentPlan.summaryPrefix || 'Selected option',
+    heading: 'Confirm this vial option',
+    weight: modal.currentPlan.weight,
+    dose: modal.currentPlan.dose,
+    exact: modal.currentPlan.exact,
+    wasteNotice: 'Review before applying to the form. Leftover product cannot be re-used per TGA guidelines.'
+  });
 });
 
 choice.apply.addEventListener('click', ()=>{
   if(!choice.currentPlan) return;
   applyPlanToForm(choice.currentPlan);
-  choice.backdrop.style.display='none';
-  choice.currentPlan=null;
-  choice.apply.disabled=true;
+  closeChoiceModal();
 });
 
 /* Boot */

@@ -416,6 +416,7 @@
 
       // Show the meter section
       meterWrap.style.display='block';
+      wasteKey.style.display='flex';
       markerLabel.textContent = 'Exact ' + fmt2(exact) + ' mg';
       tgaLine.textContent = 'TGA recommended dose: Weight: ' + fmt2(w) + ' kg × Dose: ' + fmt2(d) + ' mg/kg = ' + fmt2(exact) + ' mg';
 
@@ -426,11 +427,11 @@
 
       underEl.style.display='none';
       overEl.style.display='none';
-      wasteKey.style.display='none';
 
       if(delta < -0.005){
         underEl.textContent = '⬇ Under by: ' + fmt2(Math.abs(delta)) + ' mg';
         underEl.style.display='block';
+        setFillClass(percentWaste(delta));
       }else if(delta > 0.005){
         const pct = percentWaste(delta);
         overEl.textContent = '⬆ Over by: ' + fmt2(delta) + ' mg ('+fmt2(pct)+'%)';

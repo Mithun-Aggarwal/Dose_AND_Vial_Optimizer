@@ -60,7 +60,7 @@
   .bar{height:12px;border-radius:999px;position:relative;background:#eee;overflow:hidden}
   .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--under);transition:width .2s ease, background-color .2s ease}
   .marker{position:absolute;top:-5px;bottom:-5px;width:2px;background:#111;opacity:.9}
-  .marker-label{position:absolute;top:-22px;transform:translateX(-50%);font-size:.8rem;color:#111;font-weight:800;white-space:nowrap}
+  .marker-label{position:absolute;top:-22px;transform:translateX(-50%);font-size:.8rem;color:var(--brand);font-weight:800;white-space:nowrap}
   .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.85rem;color:#444}
   .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
   .dot-green{background:var(--green)} .dot-amber{background:var(--amber)} .dot-red{background:var(--red)} .dot-under{background:var(--under)}
@@ -156,7 +156,7 @@
       <div class="bar" id="doseBar">
         <div id="doseBarFill" class="bar-fill"></div>
         <div id="doseBarMarker" class="marker" style="left:0%"></div>
-        <div id="doseBarMarkerLabel" class="marker-label">Exact dose</div>
+        <div id="doseBarMarkerLabel" class="marker-label">TGA recommended dose</div>
       </div>
       <div id="doseBarText" class="dosebar-text mono"></div>
       <div class="legend">

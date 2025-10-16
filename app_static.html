@@ -511,14 +511,7 @@ function refreshMain(){
   // Tiny inline TGA line
   if(ok){
     inputs.calcHint.hidden=false;
-    // UPDATED to be more formal and compliant
-    inputs.calcHint.innerHTML = `
-      <div class="calc-hint-content">
-        <span class="calc-hint-label">TGA recommended dose:</span>
-        <span class="calc-hint-text">${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = <b>${fmt2(state.E)} mg</b></span>
-      </div>
-      <a class="calc-link" href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd" target="_blank" rel="noopener">View TGA guidance</a>
-    `.trim();
+    inputs.calcHint.textContent = `TGA recommended dose: ${fmt2(state.weight)} kg × ${fmt2(state.dose)} mg/kg = ${fmt2(state.E)} mg`;
   } else {
     inputs.calcHint.hidden=true;
   }

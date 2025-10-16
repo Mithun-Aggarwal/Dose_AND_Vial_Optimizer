@@ -528,7 +528,7 @@ function refreshMain(){
       if(best.wastePct<=25) btn.classList.add('pill-green'); else if(best.wastePct<=50) btn.classList.add('pill-amber'); else btn.classList.add('pill-red');
       const overRatio = state.E>0 ? ((best.total - state.E)/state.E) : 0;
       const overPct = (overRatio*100).toFixed(2);
-      btn.textContent = `Suggestion : ${compText(best.a,best.b)} = ${fmt0(best.total)} mg • ${overPct}% above exact`;
+      btn.textContent = `Dose required: ${compText(best.a,best.b)} = ${fmt0(best.total)} mg • ${overPct}% above exact`;
       btn.setAttribute('aria-label','Open suggested vial composition details');
       btn.addEventListener('click',()=> openChoicePopup(best, { summaryPrefix:'Suggestion', heading:'Suggested Vial Composition', weight:state.weight, dose:state.dose, exact:state.E }));
       row.appendChild(btn);

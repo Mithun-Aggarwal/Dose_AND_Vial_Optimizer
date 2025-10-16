@@ -193,8 +193,8 @@
     </div>
 
     <!-- Inline exact dose w/ formula -->
-    <div class="inline-hint" id="inlineHint" aria-live="polite">
-      Based on TGA — exact dose: <b id="exactMg">–</b> — TGA recommended dose: Weight: <span id="wVal">–</span> × Dose: <span id="dVal">–</span> = <b id="exactMg2">–</b>
+    <div class="inline-hint" id="inlineHint" aria-live="polite" hidden>
+      <b>TGA recommended dose:</b> Weight: <span id="wVal">–</span> × Dose: <span id="dVal">–</span> = <b id="exactMg2">–</b>
     </div>
 
     <!-- Vial counts (editable) -->
@@ -310,10 +310,10 @@
     const markerEl = $('#marker');
     const underEl = $('#under');
     const overEl = $('#over');
-    const exactEl = $('#exactMg');
     const exactEl2 = $('#exactMg2');
     const wVal = $('#wVal');
     const dVal = $('#dVal');
+    const inlineHint = $('#inlineHint');
     const suggestWrap = $('#suggestWrap');
     const bestPill = $('#bestPill');
     const bestText = $('#bestText');
@@ -342,11 +342,14 @@
         const dStr = fmt2(d);
         wVal.textContent = fmt2(w)+' kg';
         dVal.textContent = dStr+' mg/kg';
-        exactEl.textContent = fmt2(exact)+' mg';
         exactEl2.textContent = fmt2(exact)+' mg';
+        inlineHint.hidden = false;
         calcExactLine.textContent = 'Exact required dose: '+fmt2(exact)+' mg';
       }else{
-        wVal.textContent = '–'; dVal.textContent='–'; exactEl.textContent='–'; exactEl2.textContent='–';
+        wVal.textContent = '–';
+        dVal.textContent='–';
+        exactEl2.textContent='–';
+        inlineHint.hidden = true;
         calcExactLine.textContent = 'Exact required dose: –';
       }
     }

@@ -147,7 +147,8 @@
       <div class="field">
         <div class="label">Confirm patient’s treatment dose <span class="muted">*</span></div>
         <select id="dose" aria-label="Dose regimen in mg per kg">
-          <option value="2.5" selected>2.5 mg/kg</option>
+          <option value="">Select dose regimen</option>
+          <option value="2.5">2.5 mg/kg</option>
           <option value="1.9">1.9 mg/kg</option>
         </select>
       </div>
@@ -408,7 +409,7 @@ function applyPlanToForm(plan){
 
 /* ===== Init/Reset ===== */
 function resetForm(){
-  inputs.weight.value=''; inputs.dose.value='2.5'; inputs.v70.value=0; inputs.v100.value=0;
+  inputs.weight.value=''; inputs.dose.value=''; inputs.v70.value=0; inputs.v100.value=0;
   state.weight=0; state.dose=0; state.E=0;
   inputs.calcHint.hidden = true;
   inputs.doseBarWrap.hidden=true; inputs.suggestionsRow.hidden=true; inputs.suggestionsRow.innerHTML='';

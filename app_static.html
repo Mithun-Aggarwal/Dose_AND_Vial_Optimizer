@@ -126,7 +126,11 @@
     .modal-foot{padding:14px 18px; background:#fafafa; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #eee}
     table{width:100%; border-collapse:separate; border-spacing:0 8px}
     th{font-size:13px; color:#6b7280; text-align:left; font-weight:700; padding:0 10px}
-    td{background:#fff; border:1px solid #efefef; padding:10px 12px; border-radius:10px}
+    td{background:#fff; border:1px solid #efefef; padding:10px 12px; border-radius:10px; transition:background-color .15s, border-color .15s}
+    tr.waste-tier-low td{background:rgba(22,124,58,.08); border-color:rgba(22,124,58,.3)}
+    tr.waste-tier-mid td{background:rgba(234,179,8,.12); border-color:rgba(234,179,8,.32)}
+    tr.waste-tier-high td{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.32)}
+    tr.waste-tier-under td{background:rgba(107,114,128,.12); border-color:rgba(107,114,128,.28)}
     tr:focus-within td{outline:3px solid rgba(154,34,49,.25)}
 
     .muted{color:var(--muted)}
@@ -303,7 +307,7 @@
         <table aria-label="Top vial options">
           <thead>
             <tr>
-              <th>Option</th>
+              <th>Waste tier</th>
               <th>Total mg</th>
               <th>Over / Under</th>
               <th>Vial breakdown</th>
@@ -587,59 +591,74 @@
           if(a+b===0) continue;
           const total = a*70 + b*100;
           const over = +(total - exact).toFixed(2);
-          const waste = over>=0 ? over : Number.POSITIVE_INFINITY;
-          rows.push({a,b,total,over,waste});
+          rows.push({a,b,total,over});
         }
       }
 
-      const chooseBest = (filterFn)=>{
-        const candidates = rows.filter(filterFn);
-        if(candidates.length===0) return null;
-        candidates.sort((r1,r2)=>{
-          // prefer minimal non-negative over (waste). if both under, prefer least under then total
-          const f1 = (r1.over>=0)?0:1, f2 = (r2.over>=0)?0:1;
-          if(f1!==f2) return f1-f2;
-          if(f1===0){ // both non-under
-            if(r1.over!==r2.over) return r1.over - r2.over;
-          }else{
-            // both under: prefer higher total (closer to exact)
-            if(r1.over!==r2.over) return Math.abs(r1.over) - Math.abs(r2.over);
-          }
-          const n1=r1.a+r1.b, n2=r2.a+r2.b;
-          if(n1!==n2) return n1-n2;
-          return r1.total-r2.total;
-        });
-        return candidates[0];
+      const describeTier = (row)=>{
+        const pct = percentWaste(row.over);
+        if(row.over < 0){
+          return {tier:'under', label:'Under dose'};
+        }
+        if(pct < 25){
+          return {tier:'low', label:'<25% waste'};
+        }
+        if(pct <= 50){
+          return {tier:'mid', label:'25–50% waste'};
+        }
+        return {tier:'high', label:'>50% waste'};
       };
 
-      const bestMixed = chooseBest(r=>r.a>0 && r.b>0);
-      const best70Only = chooseBest(r=>r.a>0 && r.b===0);
-      const best100Only = chooseBest(r=>r.b>0 && r.a===0);
+      const sortedRows = rows
+        .map((row)=>{
+          const pct = percentWaste(row.over);
+          const tierInfo = describeTier(row);
+          return {...row, wastePct:pct, tier:tierInfo.tier, tierLabel:tierInfo.label, isUnder:row.over<0};
+        })
+        .sort((a,b)=>{
+          if(a.isUnder !== b.isUnder){
+            return a.isUnder ? 1 : -1;
+          }
+          if(!a.isUnder && !b.isUnder){
+            if(a.wastePct !== b.wastePct){
+              return a.wastePct - b.wastePct;
+            }
+          }else{
+            const aAbs = Math.abs(a.over);
+            const bAbs = Math.abs(b.over);
+            if(aAbs !== bAbs){
+              return aAbs - bAbs;
+            }
+          }
+          const aCount = a.a + a.b;
+          const bCount = b.a + b.b;
+          if(aCount !== bCount){
+            return aCount - bCount;
+          }
+          return a.total - b.total;
+        });
 
-      const topList = [
-        {label:'Mixed', row:bestMixed},
-        {label:'70-only', row:best70Only},
-        {label:'100-only', row:best100Only},
-      ].filter(x=>x.row);
-
-      topList.forEach((entry,i)=>{
-        const r = entry.row;
+      sortedRows.forEach((row,i)=>{
         const tr = document.createElement('tr');
-        const overTxt = r.over>=0? ('+'+fmt2(r.over)+' mg ('+fmt2(percentWaste(r.over))+'%)') : (fmt2(r.over)+' mg');
+        tr.classList.add('waste-tier-' + row.tier);
+        const pctTxt = fmt2(row.wastePct);
+        const overTxt = row.over>=0
+          ? `Waste +${fmt2(row.over)} mg (${pctTxt}%)`
+          : `Shortfall ${fmt2(Math.abs(row.over))} mg (${pctTxt}%)`;
         tr.innerHTML = `
-          <td><b>${entry.label}</b></td>
-          <td>${r.total} mg</td>
+          <td><b>${row.tierLabel}</b></td>
+          <td>${row.total} mg</td>
           <td>${overTxt}</td>
-          <td>${compText(r.a,r.b)}</td>
+          <td>${compText(row.a,row.b)}</td>
           <td><button class="btn ghost" data-i="${i}">Select</button></td>
         `;
         optionRows.appendChild(tr);
       });
 
-      // Attach handlers
-      optionRows.querySelectorAll('button').forEach((btn,idx)=>{
+      optionRows.querySelectorAll('button').forEach((btn)=>{
         btn.addEventListener('click',()=>{
-          const sel = topList[idx].row;
+          const idx = Number(btn.dataset.i);
+          const sel = sortedRows[idx];
           pick = sel;
           const ctx = calcExact({preferModal:true});
           openConfirm(sel, ctx);
@@ -664,7 +683,11 @@
     }
 
     [weightEl, doseEl].forEach(el=>el.addEventListener('input', ()=>{ calcExact(); updateBar(); }));
-    [modalWeightEl, modalDoseEl].forEach(el=>el.addEventListener('input', ()=>{ modalActive = true; pick = null; calcExact({preferModal:true}); renderOptions(); }));
+    [modalWeightEl, modalDoseEl].forEach(el=>{
+      const refreshOptions = ()=>{ modalActive = true; pick = null; renderOptions(); };
+      el.addEventListener('input', refreshOptions);
+      el.addEventListener('change', refreshOptions);
+    });
     [v70El, v100El].forEach(el=>el.addEventListener('input', updateBar));
 
     $('#resetBtn').addEventListener('click', ()=>{

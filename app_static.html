@@ -439,27 +439,21 @@ function refreshMain(){
   // Suggestions
   if(ok){
     const options = enumerateValidPlans(state.E, state.cap);
-    const mixed = options.find(o => o.a>=1 && o.b>=1) || null;
-    const singles = singlesThatMeet(state.E, state.cap);
-    const only70  = { a: singles.n70,  b: 0, total: singles.n70*70 };
-    const only100 = { a: 0,            b: singles.n100, total: singles.n100*100 };
-    const calcCand = c => { const waste=c.total-state.E; const wastePct=c.total>0?(waste/c.total*100):0; return {...c,waste,wastePct}; };
-    const candidates=[]; if(mixed) candidates.push(calcCand({kind:'mixed',a:mixed.a,b:mixed.b,total:mixed.total}));
-    candidates.push(calcCand({kind:'70',a:only70.a,b:0,total:only70.total}));
-    candidates.push(calcCand({kind:'100',a:0,b:only100.b,total:only100.total}));
-    candidates.sort((x,y)=> x.wastePct - y.wastePct);
-
+    const best = options.length ? options[0] : null;
     const row=inputs.suggestionsRow; row.innerHTML='';
-    candidates.forEach(c=>{
+    if(best){
       const btn=document.createElement('button'); btn.className='pill';
-      if(c.wastePct<=25) btn.classList.add('pill-green'); else if(c.wastePct<=50) btn.classList.add('pill-amber'); else btn.classList.add('pill-red');
-      const label=c.kind==='mixed'?'Mixed':(c.kind==='70'?'70-only':'100-only');
-      btn.textContent = `${label} — ${compText(c.a,c.b)} • Waste ${fmt2(c.waste)} mg (${c.wastePct.toFixed(2)}%)`;
-      btn.setAttribute('aria-label',`Open details for ${label}`);
-      btn.addEventListener('click',()=> openSuggestionPopup(c.a,c.b,label));
+      if(best.wastePct<=25) btn.classList.add('pill-green'); else if(best.wastePct<=50) btn.classList.add('pill-amber'); else btn.classList.add('pill-red');
+      const overRatio = state.E>0 ? ((best.total - state.E)/state.E) : 0;
+      const overPct = (overRatio*100).toFixed(2);
+      btn.textContent = `Suggested vial composition: 70 mg × ${best.a} + 100 mg × ${best.b} = ${fmt0(best.total)} mg • ${overPct}% above exact`;
+      btn.setAttribute('aria-label','Open suggested vial composition details');
+      btn.addEventListener('click',()=> openSuggestionPopup(best.a,best.b,'Suggested vial composition'));
       row.appendChild(btn);
-    });
-    row.hidden=false;
+      row.hidden=false;
+    } else {
+      row.hidden=true;
+    }
   } else {
     inputs.suggestionsRow.hidden=true; inputs.suggestionsRow.innerHTML='';
   }

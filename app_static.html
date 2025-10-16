@@ -306,21 +306,21 @@
     <div class="modal-bd">
       <div class="choice-banner">READ CAREFULLY: YOU ARE ABOUT TO SELECT</div>
       <section class="choice-section" aria-labelledby="choiceTitle">
-        <h3 id="choiceTitle">How the dose is calculated</h3>
+        <h3 id="choiceTitle">Dose Calculation based on the Weight &amp; Dose you have selected.</h3>
         <p>Patient weight: <span id="choiceWeight" class="mono">0.00</span> kg</p>
         <p>Selected regimen: <span id="choiceSelectedDose" class="text-positive">—</span></p>
-        <p>Alternative regimen: <span id="choiceAltDose" class="text-negative">—</span></p>
         <p>Calculation: <span id="choiceCalcResult" class="mono">0.00 mg</span></p>
       </section>
       <section class="choice-section">
-        <h3>Vial composition to avoid wastage</h3>
+        <h3>Suggested Vial Composition</h3>
         <p id="choiceVialSummary" class="mono">—</p>
         <p id="choiceVialDetail" class="mono" style="color:#444">—</p>
+        <p id="choiceWasteNotice" class="muted" style="font-size:.85rem">—</p>
       </section>
     </div>
     <div class="modal-ft">
       <a href="https://www.tga.gov.au/resources/prescription-medicines-under-evaluation/blenrep-glaxosmithkline-australia-pty-ltd"
-         class="btn brand centered-action" target="_blank" rel="noopener" aria-label="Open TGA guidance">Open TGA guidance</a>
+         class="btn brand block" target="_blank" rel="noopener" aria-label="Open TGA guidance">Open TGA guidance</a>
       <button class="btn ghost block" id="choiceApply" title="Copy this vial plan to the form">Apply to form</button>
       <div class="muted" style="text-align:center">You remain responsible for clinical decisions. Verify with PI.</div>
       <div class="choice-close-wrap">
@@ -358,7 +358,12 @@ function enumerateValidPlans(E, cap=10){
 }
 function singlesThatMeet(E, cap=10){ return { n70:Math.min(Math.ceil(E/70),cap), n100:Math.min(Math.ceil(E/100),cap) }; }
 function wasteBandLabel(pct){ if(pct<=25) return 'Low waste'; if(pct<=50) return 'Moderate waste'; return 'High waste'; }
-function compText(a,b){ const p=[]; if(a>0)p.push(`70×${a}`); if(b>0)p.push(`100×${b}`); return p.length?p.join(' + '):'—'; }
+function compText(a,b){
+  const p=[];
+  if(a>0) p.push(`70mg × ${a}`);
+  if(b>0) p.push(`100mg × ${b}`);
+  return p.length ? p.join(' + ') : '—';
+}
 
 /* ===== DOM refs & state ===== */
 const inputs = {
@@ -379,8 +384,9 @@ modal.currentPlan = null;
 modal.apply.disabled = true;
 const choice = {
   backdrop: el('choiceBackdrop'),
-  weight: el('choiceWeight'), selectedDose: el('choiceSelectedDose'), altDose: el('choiceAltDose'),
-  calcResult: el('choiceCalcResult'), vialSummary: el('choiceVialSummary'), vialDetail: el('choiceVialDetail'),
+  weight: el('choiceWeight'), selectedDose: el('choiceSelectedDose'),
+  calcResult: el('choiceCalcResult'), vialSummary: el('choiceVialSummary'),
+  vialDetail: el('choiceVialDetail'), wasteNotice: el('choiceWasteNotice'),
   apply: el('choiceApply'), close: el('choiceClose')
 };
 choice.currentPlan = null;
@@ -481,7 +487,7 @@ function refreshMain(){
       if(best.wastePct<=25) btn.classList.add('pill-green'); else if(best.wastePct<=50) btn.classList.add('pill-amber'); else btn.classList.add('pill-red');
       const overRatio = state.E>0 ? ((best.total - state.E)/state.E) : 0;
       const overPct = (overRatio*100).toFixed(2);
-      btn.textContent = `Suggested vial composition: 70 mg × ${best.a} + 100 mg × ${best.b} = ${fmt0(best.total)} mg • ${overPct}% above exact`;
+      btn.textContent = `Suggestion : ${compText(best.a,best.b)} = ${fmt0(best.total)} mg • ${overPct}% above exact`;
       btn.setAttribute('aria-label','Open suggested vial composition details');
       btn.addEventListener('click',()=> openSuggestionPopup(best.a,best.b,'Suggested vial composition'));
       row.appendChild(btn);
@@ -526,25 +532,15 @@ function openSuggestionPopup(a,b,label){
   const E=state.E;
   const T=a*70+b*100;
   const selectedDose = state.dose>0 ? fmt2(state.dose) : '0.00';
-  const altDose = state.dose===2.5 ? 1.9 : state.dose===1.9 ? 2.5 : null;
 
   choice.weight.textContent = fmt2(state.weight);
   choice.selectedDose.textContent = state.dose>0 ? `${selectedDose} mg/kg regimen` : 'No regimen selected';
-  choice.altDose.textContent = altDose!==null ? `${fmt2(altDose)} mg/kg regimen` : 'No alternate regimen recorded';
   choice.calcResult.textContent = `${selectedDose} mg/kg × ${fmt2(state.weight)} kg = ${fmt2(E)} mg`;
 
   const compositionText = compText(a,b);
-  choice.vialSummary.textContent = `${label}: ${compositionText} = ${fmt0(T)} mg`;
-
-  if(T + EPS < E){
-    const underBy = E - T;
-    choice.vialDetail.textContent = `Delivers ${fmt0(T)} mg total — still ${fmt2(underBy)} mg short of the ${fmt2(E)} mg exact dose.`;
-  } else {
-    const overBy = T - E;
-    const overPct = T>0 ? (overBy/T*100) : 0;
-    const band = wasteBandLabel(overPct);
-    choice.vialDetail.textContent = `Delivers ${fmt0(T)} mg total — ${fmt2(overBy)} mg (${overPct.toFixed(2)}%) above the ${fmt2(E)} mg exact dose (${band}).`;
-  }
+  choice.vialSummary.textContent = `Suggestion : ${compositionText} = ${fmt0(T)} mg`;
+  choice.vialDetail.textContent = `Dose = ${fmt2(E)} mg; total order quantity is ${fmt0(T)} mg`;
+  choice.wasteNotice.textContent = 'Leftover product cannot be re-used per TGA guidelines.';
 
   choice.currentPlan = { a, b };
   choice.apply.disabled = false;

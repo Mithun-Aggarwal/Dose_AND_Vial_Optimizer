@@ -128,10 +128,10 @@
     table{width:100%; border-collapse:separate; border-spacing:0 8px}
     th{font-size:13px; color:#6b7280; text-align:left; font-weight:700; padding:0 10px}
     td{background:#fff; border:1px solid #efefef; padding:10px 12px; border-radius:10px; transition:background-color .15s, border-color .15s}
-    tr.waste-tier-low td{background:rgba(22,124,58,.08); border-color:rgba(22,124,58,.3)}
-    tr.waste-tier-mid td{background:rgba(234,179,8,.12); border-color:rgba(234,179,8,.32)}
-    tr.waste-tier-high td{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.32)}
-    tr.waste-tier-under td{background:rgba(107,114,128,.12); border-color:rgba(107,114,128,.28)}
+    tr.waste-low td{background:rgba(22,124,58,.08); border-color:rgba(22,124,58,.26); color:var(--ink)}
+    tr.waste-mid td{background:rgba(234,179,8,.12); border-color:rgba(234,179,8,.28); color:var(--ink)}
+    tr.waste-high td{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.3); color:var(--ink)}
+    tr.waste-under td{background:rgba(107,114,128,.14); border-color:rgba(107,114,128,.28); color:var(--ink)}
     tr:focus-within td{outline:3px solid rgba(154,34,49,.25)}
 
     .muted{color:var(--muted)}
@@ -612,44 +612,72 @@
         return {tier:'high', label:'>50% waste'};
       };
 
-      const sortedRows = rows
-        .map((row)=>{
+      const typeMeta = {
+        mixed:{label:'Mixed vials'},
+        v70:{label:'All 70 mg vials'},
+        v100:{label:'All 100 mg vials'},
+      };
+
+      const classifyRow = (row)=>{
+        if(row.a>0 && row.b>0) return 'mixed';
+        if(row.b===0) return 'v70';
+        return 'v100';
+      };
+
+      const compareRows = (a,b)=>{
+        const aUnder = a.over < 0;
+        const bUnder = b.over < 0;
+        if(aUnder !== bUnder){
+          return aUnder ? 1 : -1;
+        }
+        const aMetric = aUnder ? Math.abs(a.over) + 1000 : a.over;
+        const bMetric = bUnder ? Math.abs(b.over) + 1000 : b.over;
+        if(aMetric !== bMetric){
+          return aMetric - bMetric;
+        }
+        const aCount = a.a + a.b;
+        const bCount = b.a + b.b;
+        if(aCount !== bCount){
+          return aCount - bCount;
+        }
+        return a.total - b.total;
+      };
+
+      const bestByType = {};
+      rows.forEach((row)=>{
+        const type = classifyRow(row);
+        const current = bestByType[type];
+        if(!current || compareRows(row, current) < 0){
+          bestByType[type] = row;
+        }
+      });
+
+      const sortedRows = Object.entries(bestByType)
+        .map(([type,row])=>{
+          if(!row) return null;
           const pct = percentWaste(row.over);
           const tierInfo = describeTier(row);
-          return {...row, wastePct:pct, tier:tierInfo.tier, tierLabel:tierInfo.label, isUnder:row.over<0};
+          return {
+            ...row,
+            wastePct:pct,
+            tier:tierInfo.tier,
+            tierLabel:tierInfo.label,
+            type,
+            typeLabel:typeMeta[type] ? typeMeta[type].label : 'Option',
+          };
         })
-        .sort((a,b)=>{
-          if(a.isUnder !== b.isUnder){
-            return a.isUnder ? 1 : -1;
-          }
-          if(!a.isUnder && !b.isUnder){
-            if(a.wastePct !== b.wastePct){
-              return a.wastePct - b.wastePct;
-            }
-          }else{
-            const aAbs = Math.abs(a.over);
-            const bAbs = Math.abs(b.over);
-            if(aAbs !== bAbs){
-              return aAbs - bAbs;
-            }
-          }
-          const aCount = a.a + a.b;
-          const bCount = b.a + b.b;
-          if(aCount !== bCount){
-            return aCount - bCount;
-          }
-          return a.total - b.total;
-        });
+        .filter(Boolean)
+        .sort(compareRows);
 
       sortedRows.forEach((row,i)=>{
         const tr = document.createElement('tr');
-        tr.classList.add('waste-tier-' + row.tier);
+        tr.classList.add('waste-' + row.tier);
         const pctTxt = fmt2(row.wastePct);
         const overTxt = row.over>=0
           ? `Waste +${fmt2(row.over)} mg (${pctTxt}%)`
           : `Shortfall ${fmt2(Math.abs(row.over))} mg (${pctTxt}%)`;
         tr.innerHTML = `
-          <td><b>${row.tierLabel}</b></td>
+          <td><b>${row.typeLabel}</b><div class="muted">${row.tierLabel}</div></td>
           <td>${row.total} mg</td>
           <td>${overTxt}</td>
           <td>${compText(row.a,row.b)}</td>

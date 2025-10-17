@@ -94,6 +94,7 @@
       height:14px; width:100%; background:#f3f4f6; border-radius:999px; overflow:hidden; border:1px solid #ececec; position:relative;
     }
     .meter-fill{height:100%; width:0%; transition:width .25s}
+    .fill-base{background:linear-gradient(90deg,#1f2937,#111827)}
     .fill-green{background:linear-gradient(90deg, #19b36c, #1ea87b)}
     .fill-yellow{background:linear-gradient(90deg, #facc15, #eab308)}
     .fill-red{background:linear-gradient(90deg, #f43f5e, #ef4444)}
@@ -240,7 +241,7 @@
     <div class="meter-wrap" id="meterWrap" aria-live="polite">
       <div class="meter-label">Dose progress</div>
       <div class="meter" id="meter">
-        <div id="fill" class="meter-fill fill-green"></div>
+        <div id="fill" class="meter-fill fill-base"></div>
         <div class="marker" id="marker" title="Exact dose"></div>
         <div class="marker-label" id="markerLabel">Exact –</div>
       </div>
@@ -424,6 +425,7 @@
 
     function setFillClass(pct){
       fillEl.classList.remove('fill-green','fill-yellow','fill-red');
+      if(pct==null) return;
       if(pct < 25){ fillEl.classList.add('fill-green'); }
       else if(pct <= 50){ fillEl.classList.add('fill-yellow'); }
       else { fillEl.classList.add('fill-red'); }
@@ -444,6 +446,7 @@
         meterWrap.style.display='none';
         suggestWrap.style.display='none';
         wasteKey.style.display='none';
+        setFillClass(null);
         return;
       }
 
@@ -473,7 +476,7 @@
       if(delta < -0.005){
         underEl.textContent = '⬇ Under by: ' + fmt2(Math.abs(delta)) + ' mg';
         underEl.style.display='block';
-        setFillClass(percentWaste(delta));
+        setFillClass(null);
       }else if(delta > 0.005){
         const pct = percentWaste(delta);
         overEl.textContent = '⬆ Over by: ' + fmt2(delta) + ' mg ('+fmt2(pct)+'%)';
@@ -483,7 +486,7 @@
       }else{
         overEl.textContent = 'Exact match';
         overEl.style.display='block';
-        setFillClass(0);
+        setFillClass(null);
       }
 
       // Suggested best (pill)
